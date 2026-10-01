@@ -129,20 +129,26 @@ describe("[fallback] several instances", function () {
       const slow = secondInstance();
       const due = (await LoadRecord(created.id))!;
       const decided = Decide(due, MONTH_LATER);
-      const outcome = await slow.perform(due, decided);
+      provider.setUnreachable(true);
+      const unreachable = await slow.perform(due, decided);
+      provider.setUnreachable(false);
 
       await Runtime().engine.process(created.id);
-      const renewed = await GetSubscription(created.id);
-      await slow.commit(due, decided, outcome);
+      await slow.commit(due, decided, unreachable);
+      clock.advance(Runtime().settings.errorBackoffMs + MINUTE_MS);
+      await Runtime().engine.sweep();
 
       const after = await GetSubscription(created.id);
       assert.equal(
         after.currentPeriodStart,
-        renewed.currentPeriodStart,
-        "the period moves once",
+        MONTH_LATER,
+        "renewed once, not twice",
       );
-      assert.equal(after.currentPeriodEnd, renewed.currentPeriodEnd);
-      assert.equal(after.latestPayment, renewed.latestPayment);
+      assert.equal(
+        chargesMade(created.id).length,
+        2,
+        "the next period is not charged early",
+      );
     });
   });
 

@@ -48,6 +48,8 @@ function base(
     attempt: 0,
     pendingPayment: null,
     refusedPayment: null,
+    refusal: null,
+    attemptMethod: null,
     providerReference: null,
     nextActionAt: now,
     dueAt: null,

@@ -1,6 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { Logging } from "@antelopejs/interface-core/logging";
-import { GetPayment, PaymentError } from "@antelopejs/interface-payment";
+import {
+  CustomerNotFoundError,
+  GetPayment,
+  InvalidPaymentStateError,
+  PaymentError,
+  PaymentNotFoundError,
+  UnsupportedOperationError,
+} from "@antelopejs/interface-payment";
 
 import { Now } from "./clock";
 import { Deliver } from "./events";
@@ -25,6 +32,16 @@ import {
 } from "./transitions";
 
 const WRITE_ATTEMPTS = 5;
+const REFUSALS = [
+  CustomerNotFoundError,
+  PaymentNotFoundError,
+  InvalidPaymentStateError,
+  UnsupportedOperationError,
+];
+
+function isRefusal(error: PaymentError): boolean {
+  return REFUSALS.some((refusal) => error instanceof refusal);
+}
 const NO_LEASE = 0;
 
 export type WriteListener = (record: SubscriptionRecord) => void;
@@ -124,9 +141,11 @@ export class Engine {
     if (!record || record.phase !== "live") return undefined;
     if (record.dueAt === null || record.dueAt > now) return undefined;
     if (record.leaseOwner !== null && record.leaseUntil > now) return undefined;
+    const leaseUntil = now + this.settings.leaseMs;
     const claimed = await MutateRecord(record, {
       leaseOwner: this.instanceId,
-      leaseUntil: now + this.settings.leaseMs,
+      leaseUntil,
+      dueAt: leaseUntil,
     });
     this.stats[claimed ? "claimed" : "claimsLost"] += 1;
     return claimed;
@@ -137,12 +156,24 @@ export class Engine {
     if (record.nextActionAt === null || record.nextActionAt > now)
       return record;
     const decided = Decide(record, now);
-    const outcome = await this.perform(record, decided);
-    const committed = await this.commit(record, decided, outcome);
+    const attempting = await this.pinAttemptMethod(record, decided);
+    if (!attempting) return (await LoadRecord(record._id)) ?? record;
+    const outcome = await this.perform(attempting, decided);
+    const committed = await this.commit(attempting, decided, outcome);
     if (record.status !== "canceled" && committed.status === "canceled") {
       await this.releaseScheduleFor(record._id);
     }
     return committed;
+  }
+
+  async pinAttemptMethod(
+    record: SubscriptionRecord,
+    decided: Decision,
+  ): Promise<SubscriptionRecord | undefined> {
+    if (decided.kind !== "charge" || record.attemptMethod !== null) {
+      return record;
+    }
+    return this.write(record, { attemptMethod: record.paymentMethod });
   }
 
   async perform(
@@ -158,18 +189,22 @@ export class Engine {
       return { kind: RESULT_OF_PAYMENT[payment.status], payment: payment.id };
     } catch (error) {
       if (!(error instanceof PaymentError)) throw error;
+      const kind = isRefusal(error) ? "failed" : "error";
       Logging.Warn(
-        `payment-subscriptions: provider unreachable for ${record._id}`,
+        `payment-subscriptions: the provider ${kind === "failed" ? "refused" : "could not take"} ${record._id}'s charge`,
         error.message,
       );
-      return { kind: "error", payment: null };
+      return { kind, payment: null, reason: error.message };
     }
   }
 
   private charge(record: SubscriptionRecord, decided: Decision) {
     this.stats.charges += 1;
     return this.schedule.charge({
-      subscription: ToSubscription(record),
+      subscription: {
+        ...ToSubscription(record),
+        paymentMethod: record.attemptMethod ?? record.paymentMethod,
+      },
       provider: providerOf(record),
       providerReference: record.providerReference ?? undefined,
       idempotencyKey: ChargeKey(record, decided),

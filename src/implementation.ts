@@ -94,12 +94,11 @@ async function completeCreation(
     await engine.write(record, {
       phase: "refused",
       refusedPayment: outcome.payment,
+      refusal: outcome.reason ?? null,
       leaseOwner: null,
       leaseUntil: 0,
     });
-    throw new SubscriptionPaymentError(
-      await GetPayment(outcome.payment!, provider),
-    );
+    throw await refusalOf(record, outcome.payment, outcome.reason, provider);
   }
   const live = await engine.commit(record, decided, outcome, {
     patch: { phase: "live" },
@@ -107,6 +106,20 @@ async function completeCreation(
   });
   await engine.release(live);
   return ToSubscription(live);
+}
+
+async function refusalOf(
+  record: SubscriptionRecord,
+  payment: string | null,
+  reason: string | undefined,
+  provider: string | undefined,
+): Promise<SubscriptionError> {
+  if (payment !== null) {
+    return new SubscriptionPaymentError(await GetPayment(payment, provider));
+  }
+  return new InvalidSubscriptionRequestError(
+    `The payment provider refused to charge ${record.paymentMethod}: ${reason ?? "no reason given"}`,
+  );
 }
 
 async function waitForCreation(
@@ -147,8 +160,11 @@ async function replayCreation(
     throw new SubscriptionError(`Subscription ${id} vanished during creation`);
   if (record.phase === "live") return ToSubscription(record);
   if (record.phase === "refused") {
-    throw new SubscriptionPaymentError(
-      await GetPayment(record.refusedPayment!, provider),
+    throw await refusalOf(
+      record,
+      record.refusedPayment,
+      record.refusal ?? undefined,
+      provider,
     );
   }
   if (record.leaseUntil > Now()) {

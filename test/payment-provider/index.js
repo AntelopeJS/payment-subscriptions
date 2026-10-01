@@ -40,12 +40,18 @@ function emptyAccount() {
   };
 }
 
-const state = { accounts: new Map(), ledger: [], isUnreachable: false };
+const state = {
+  accounts: new Map(),
+  ledger: [],
+  isUnreachable: false,
+  losesResponses: false,
+};
 
 function reset() {
   state.accounts = new Map(ACCOUNTS.map((name) => [name, emptyAccount()]));
   state.ledger = [];
   state.isUnreachable = false;
+  state.losesResponses = false;
 }
 reset();
 
@@ -114,6 +120,7 @@ function publicView(record) {
   const view = { ...record };
   delete view.token;
   delete view.reads;
+  delete view.request;
   return view;
 }
 
@@ -150,6 +157,30 @@ function assertReachable() {
   }
 }
 
+const COMPARED_FIELDS = ["paymentMethod", "customer"];
+
+function replay(original, request) {
+  const differs =
+    COMPARED_FIELDS.some(
+      (field) => original.request[field] !== request[field],
+    ) || original.amount.value !== request.amount.value;
+  if (differs) {
+    throw new payment.PaymentError(
+      "Keys for idempotent requests can only be used with the same parameters they were first used with",
+      "idempotency_error",
+    );
+  }
+  return publicView(original);
+}
+
+function loseResponse(record) {
+  if (!state.losesResponses) return publicView(record);
+  throw new payment.PaymentError(
+    `The response to ${record.id} was lost`,
+    "test_response_lost",
+  );
+}
+
 async function CreatePayment(request, idempotencyKey, provider) {
   assertConsistent(request);
   const store = account(provider);
@@ -170,7 +201,7 @@ async function CreatePayment(request, idempotencyKey, provider) {
     provider,
     replayed: Boolean(replayed),
   });
-  if (replayed) return publicView(store.payments.get(replayed));
+  if (replayed) return replay(store.payments.get(replayed), request);
   if (request.customer && !store.customers.has(request.customer)) {
     throw new payment.CustomerNotFoundError(request.customer);
   }
@@ -179,8 +210,9 @@ async function CreatePayment(request, idempotencyKey, provider) {
     request,
     behaviourOf(store, request.paymentMethod),
   );
+  record.request = request;
   store.replies.set(idempotencyKey, record.id);
-  return publicView(record);
+  return loseResponse(record);
 }
 
 function settleOnRead(record) {
@@ -282,6 +314,9 @@ const testControl = {
   reset,
   setUnreachable: (isUnreachable) => {
     state.isUnreachable = isUnreachable;
+  },
+  setLosesResponses: (losesResponses) => {
+    state.losesResponses = losesResponses;
   },
   ledger: () => state.ledger,
   chargesFor: (subscriptionId) =>

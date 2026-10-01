@@ -19,6 +19,7 @@ export type OutcomeKind = "succeeded" | "failed" | "pending" | "error" | "end";
 export interface Outcome {
   kind: OutcomeKind;
   payment: string | null;
+  reason?: string;
 }
 
 export interface Transition {
@@ -49,6 +50,9 @@ function decision(
 }
 
 export function Decide(record: SubscriptionRecord, now: number): Decision {
+  if (record.status === "canceled" && record.pendingPayment === null) {
+    return decision(record, "end", record.periodIndex, record.attempt);
+  }
   if (record.pendingPayment !== null) {
     return decision(record, "settle", record.periodIndex, record.attempt);
   }
@@ -86,18 +90,30 @@ type Rule = (
   settings: Settings,
 ) => Transition;
 
+interface ChargeReference {
+  payment: string | null;
+  occurrence?: string;
+}
+
 function withEvents(
   record: SubscriptionRecord,
   patch: RecordPatch,
   now: number,
   types: StoredEvent["type"][],
-  payment: string | null,
+  charge: ChargeReference,
 ): Transition {
   const after = { ...record, ...patch };
+  const occurrence = charge.occurrence ?? charge.payment;
   return {
     patch,
-    events: types.map((type) => RaiseEvent(after, type, now, payment)),
+    events: types.map((type) =>
+      RaiseEvent(after, type, now, charge.payment, occurrence),
+    ),
   };
+}
+
+function attemptOccurrence(outcome: Outcome, decided: Decision): string {
+  return outcome.payment ?? `refused-${decided.periodIndex}-${decided.attempt}`;
 }
 
 const succeeded: Rule = (record, decided, outcome, now) => {
@@ -107,24 +123,23 @@ const succeeded: Rule = (record, decided, outcome, now) => {
     status: "active",
     attempt: 0,
     pendingPayment: null,
+    attemptMethod: null,
     latestPayment: outcome.payment,
     nextActionAt: paid.currentPeriodEnd!,
   };
-  return withEvents(
-    record,
-    patch,
-    now,
-    ["subscription.payment_succeeded"],
-    outcome.payment,
-  );
+  return withEvents(record, patch, now, ["subscription.payment_succeeded"], {
+    payment: outcome.payment,
+  });
 };
 
 const failed: Rule = (record, decided, outcome, now, settings) => {
   const base: RecordPatch = {
     ...period(record, decided.periodIndex),
     pendingPayment: null,
-    latestPayment: outcome.payment,
+    attemptMethod: null,
+    latestPayment: outcome.payment ?? record.latestPayment,
   };
+  const occurrence = attemptOccurrence(outcome, decided);
   const retryDelay = settings.retryDelaysMs[decided.attempt];
   if (retryDelay === undefined) {
     const ended = {
@@ -139,7 +154,7 @@ const failed: Rule = (record, decided, outcome, now, settings) => {
       ended,
       now,
       ["subscription.payment_failed", "subscription.canceled"],
-      outcome.payment,
+      { payment: outcome.payment, occurrence },
     );
   }
   const retry = {
@@ -148,19 +163,17 @@ const failed: Rule = (record, decided, outcome, now, settings) => {
     attempt: decided.attempt + 1,
     nextActionAt: now + retryDelay,
   };
-  return withEvents(
-    record,
-    retry,
-    now,
-    ["subscription.payment_failed"],
-    outcome.payment,
-  );
+  return withEvents(record, retry, now, ["subscription.payment_failed"], {
+    payment: outcome.payment,
+    occurrence,
+  });
 };
 
 const pending: Rule = (record, decided, outcome, now, settings) => ({
   patch: {
     ...period(record, decided.periodIndex),
     status: record.status === "trialing" ? "active" : record.status,
+    attemptMethod: null,
     latestPayment: outcome.payment,
     pendingPayment: outcome.payment,
     nextActionAt: now + settings.settlementPollMs,
@@ -180,7 +193,9 @@ const end: Rule = (record, _decided, _outcome, now) => {
     endReason: "requested",
     nextActionAt: null,
   };
-  return withEvents(record, patch, now, ["subscription.canceled"], null);
+  return withEvents(record, patch, now, ["subscription.canceled"], {
+    payment: null,
+  });
 };
 
 const RULES: Record<OutcomeKind, Rule> = {
@@ -200,6 +215,7 @@ type EndedRule = (
 
 const SETTLED_ON_ENDED: RecordPatch = {
   pendingPayment: null,
+  attemptMethod: null,
   nextActionAt: null,
 };
 
@@ -210,10 +226,13 @@ const ENDED_RULES: Record<OutcomeKind, EndedRule> = {
       { ...SETTLED_ON_ENDED, latestPayment: outcome.payment },
       now,
       ["subscription.payment_succeeded"],
-      outcome.payment,
+      { payment: outcome.payment },
     ),
   failed: (record, outcome) => ({
-    patch: { ...SETTLED_ON_ENDED, latestPayment: outcome.payment },
+    patch: {
+      ...SETTLED_ON_ENDED,
+      latestPayment: outcome.payment ?? record.latestPayment,
+    },
     events: [],
   }),
   pending: (_record, outcome, now, settings) => ({
@@ -224,11 +243,14 @@ const ENDED_RULES: Record<OutcomeKind, EndedRule> = {
     },
     events: [],
   }),
-  error: (_record, _outcome, now, settings) => ({
-    patch: { nextActionAt: now + settings.errorBackoffMs },
+  error: (record, _outcome, now, settings) => ({
+    patch:
+      record.pendingPayment === null
+        ? { ...SETTLED_ON_ENDED }
+        : { nextActionAt: now + settings.errorBackoffMs },
     events: [],
   }),
-  end: () => undefined,
+  end: () => ({ patch: { ...SETTLED_ON_ENDED }, events: [] }),
 };
 
 export function Apply(

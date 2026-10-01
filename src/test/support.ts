@@ -46,6 +46,7 @@ interface ProviderControl {
     string
   >;
   setUnreachable(isUnreachable: boolean): void;
+  setLosesResponses(losesResponses: boolean): void;
   ledger(): LedgerEntry[];
   chargesFor(subscriptionId: string): LedgerEntry[];
   paymentStatus(id: string, provider?: string): string | undefined;

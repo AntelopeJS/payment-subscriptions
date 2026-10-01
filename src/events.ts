@@ -25,12 +25,13 @@ export function RaiseEvent(
   type: SubscriptionEventType,
   createdAt: number,
   payment: string | null = null,
+  occurrence: string | null = payment,
 ): StoredEvent {
   return {
     id:
-      payment === null
+      occurrence === null
         ? `${record._id}:${type}`
-        : `${record._id}:${type}:${payment}`,
+        : `${record._id}:${type}:${occurrence}`,
     type,
     createdAt,
     subscription: ToSubscription(record),

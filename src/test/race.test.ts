@@ -120,6 +120,32 @@ describe("[fallback] several instances", function () {
     );
   });
 
+  it("ignores an outcome that arrives after another instance has moved the renewal on", async () => {
+    const created = await subscribe(await newPayer());
+    await Runtime().engine.drain();
+
+    await withTriggerStopped(async () => {
+      clock.advanceTo(MONTH_LATER);
+      const slow = secondInstance();
+      const due = (await LoadRecord(created.id))!;
+      const decided = Decide(due, MONTH_LATER);
+      const outcome = await slow.perform(due, decided);
+
+      await Runtime().engine.process(created.id);
+      const renewed = await GetSubscription(created.id);
+      await slow.commit(due, decided, outcome);
+
+      const after = await GetSubscription(created.id);
+      assert.equal(
+        after.currentPeriodStart,
+        renewed.currentPeriodStart,
+        "the period moves once",
+      );
+      assert.equal(after.currentPeriodEnd, renewed.currentPeriodEnd);
+      assert.equal(after.latestPayment, renewed.latestPayment);
+    });
+  });
+
   it("renews from the database alone, with no trigger and nothing in memory", async () => {
     const created = await subscribe(await newPayer());
     await Runtime().engine.drain();

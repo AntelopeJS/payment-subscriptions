@@ -11,10 +11,6 @@ const ORDERS_PER_MILLISECOND = 1000;
 
 let lastOrder = 0;
 
-/**
- * A listing order that keeps two subscriptions created in the same
- * millisecond by this process in the order they were created.
- */
 function creationOrder(now: number): number {
   lastOrder = Math.max(now * ORDERS_PER_MILLISECOND, lastOrder + 1);
   return lastOrder;
@@ -64,10 +60,6 @@ function base(
   };
 }
 
-/**
- * A subscription whose first charge is deferred — to a trial end or a billing
- * anchor — is live at once: period -1 runs until then and nothing is charged.
- */
 function deferred(
   record: SubscriptionRecord,
   startsAt: number,
@@ -88,7 +80,6 @@ function deferred(
   };
 }
 
-/** Who is creating a subscription, and where. */
 export interface Creation {
   id: string;
   provider: string;
@@ -97,11 +88,6 @@ export interface Creation {
   settings: Settings;
 }
 
-/**
- * The record a creation starts from. One that charges at once starts in the
- * `creating` phase, held under this instance's lease until the first charge
- * has an outcome.
- */
 export function InitialRecord(
   request: SubscriptionRequest,
   creation: Creation,

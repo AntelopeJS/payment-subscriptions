@@ -1,17 +1,6 @@
 const payment = require("@antelopejs/interface-payment");
 const { ImplementInterface } = require("@antelopejs/interface-core");
 
-/**
- * A payment provider whose behaviour is chosen by the token a method was saved
- * from, so the suite can make a later off-session charge succeed, decline or
- * sit pending without reaching into the subscriptions module.
- *
- * It keeps a ledger of every CreatePayment call, replays included, so a test
- * can tell "charged once" from "charged twice and deduplicated by the
- * idempotency key". Only the calls the subscriptions module and the
- * conformance suite make are implemented; the rest decline as unsupported.
- */
-
 const TOKENS = Object.freeze({
   succeeds: "tok_succeeds",
   declinesOffSession: "tok_declines_off_session",
@@ -288,10 +277,6 @@ function construct() {
   ImplementInterface(payment, implementation);
 }
 
-/**
- * The calls a test inspects. Read through `require` from the test files,
- * which share this module's instance.
- */
 const testControl = {
   TOKENS,
   reset,

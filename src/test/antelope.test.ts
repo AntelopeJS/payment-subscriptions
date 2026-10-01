@@ -5,20 +5,6 @@ import {
   defineConfig,
 } from "@antelopejs/interface-core/config";
 
-/**
- * Two runs of one suite, one per renewal clock. `pnpm test` runs both.
- *
- * - polling: no Redis module is loaded at all, so the module must notice that
- *   and poll the database instead of waiting on a Redis client nobody will
- *   provide.
- * - redis: the real `@antelopejs/redis` module against a real Redis server,
- *   with the database sweep stretched to an hour so that anything renewed on
- *   time was renewed by Redis.
- *
- * Both run a real MongoDB through the real `@antelopejs/mongodb` module, since
- * the claim that keeps a renewal from being charged twice is the database's
- * conditional write and nothing else.
- */
 const CLOCK =
   process.env.ANTELOPE_SUBSCRIPTIONS_TEST_CLOCK === "redis"
     ? "redis"
@@ -34,7 +20,14 @@ const PAYMENT_ENV = {
   ANTELOPE_PAYMENT_TEST_CURRENCY: "EUR",
 };
 
+const EXIT_GRACE_MS = 2_000;
+
 let mongod: MongoMemoryServer | undefined;
+
+function exitOnceSchedulerTimerIsAllThatIsLeft(): void {
+  if (CLOCK !== "redis") return;
+  setTimeout(() => process.exit(), EXIT_GRACE_MS).unref();
+}
 let redis: RedisMemoryServer | undefined;
 
 async function redisModules(): Promise<Record<string, AntelopeModuleConfig>> {
@@ -94,6 +87,7 @@ export default defineConfig({
     async cleanup() {
       await redis?.stop();
       await mongod?.stop();
+      exitOnceSchedulerTimerIsAllThatIsLeft();
     },
   },
 });

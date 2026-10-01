@@ -14,7 +14,6 @@ export function SetRuntime(next: RuntimeState | undefined): void {
   state = next;
 }
 
-/** The engine and settings the module was constructed with. */
 export function Runtime(): RuntimeState {
   if (!state) throw new Error("payment-subscriptions has not been constructed");
   return state;

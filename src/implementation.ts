@@ -75,10 +75,6 @@ function wrapProviderFailure(error: unknown): never {
   throw error;
 }
 
-/**
- * Charges the first period of a record still being created, and makes it
- * live — or refused, if the charge was declined.
- */
 async function completeCreation(
   record: SubscriptionRecord,
   provider: string | undefined,
@@ -142,11 +138,6 @@ async function resumeCreation(
   return completeCreation(claimed, provider);
 }
 
-/**
- * Answers a creation whose idempotency key has been seen before, with what
- * the first attempt produced. A first attempt that died mid-charge is resumed
- * once its lease runs out, and replays the same charge.
- */
 async function replayCreation(
   id: string,
   provider: string | undefined,
@@ -218,11 +209,6 @@ type Change = (
   now: number,
 ) => Promise<Transition> | Transition;
 
-/**
- * Applies a caller's change under the record's revision, retrying on a
- * conflicting write. A replayed idempotency key returns the subscription as
- * it stands instead of applying the change again.
- */
 async function changeLive(
   id: string,
   idempotencyKey: string,

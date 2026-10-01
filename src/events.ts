@@ -20,11 +20,6 @@ export function UnregisterHandler(id: string): void {
   handlers.delete(id);
 }
 
-/**
- * Builds the event for a transition. The identifier is derived from the
- * transition itself, so recomputing a transition after a write conflict
- * yields the same event rather than a second one.
- */
 export function RaiseEvent(
   record: SubscriptionRecord,
   type: SubscriptionEventType,
@@ -57,12 +52,6 @@ async function deliverOne(event: StoredEvent): Promise<boolean> {
   return outcomes.every((outcome) => outcome.status === "fulfilled");
 }
 
-/**
- * Hands each event to every registered handler, in order.
- *
- * @returns the identifiers of the events every handler accepted. The rest stay
- *   in the outbox and are delivered again.
- */
 export async function Deliver(events: StoredEvent[]): Promise<string[]> {
   const delivered: string[] = [];
   for (const event of events) {

@@ -3,9 +3,7 @@ const MINUTE_MS = 60 * SECOND_MS;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
 
-/**
- * The module's configuration. Every field is optional.
- */
+/** The module's configuration. Every field is optional. */
 export interface Config {
   /**
    * How often the database is polled for due renewals when no Redis

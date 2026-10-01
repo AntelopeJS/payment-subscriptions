@@ -8,6 +8,7 @@ import {
 
 import { Runtime } from "../runtime";
 import { ActiveClock } from "../index";
+import { useRedisTriggerOutsideRouting } from "./redis-routing";
 import { CLOCK_UNDER_TEST, chargesMade, newPayer, subscribe } from "./support";
 
 const TRIAL_MS = 1500;
@@ -17,7 +18,6 @@ const REDIS_TASKS = "SchedulerUtil.Tasks";
 const TASK_PREFIX = "payment-subscriptions:";
 const SCHEDULING_SLACK_MS = 50;
 
-/** Waits without sweeping: whatever happens meanwhile, the module's own clock did. */
 async function waitFor<T>(
   read: () => Promise<T>,
   isDone: (value: T) => boolean,
@@ -63,12 +63,23 @@ describe("[fallback] the renewal clock without Redis", function () {
   });
 });
 
-describe("[fallback] the renewal clock with Redis", function () {
+describe("[fallback] the renewal clock with Redis wired, as published", function () {
+  before(function () {
+    if (CLOCK_UNDER_TEST !== "redis") this.skip();
+  });
+
+  it("polls, because the published scheduler refuses the renewal handler", () => {
+    assert.equal(ActiveClock(), "polling");
+  });
+});
+
+describe("[fallback] the Redis trigger, with its handler registered outside the routing", function () {
   this.timeout(WAIT_MS * 3);
 
   before(function () {
     if (CLOCK_UNDER_TEST !== "redis") this.skip();
   });
+  useRedisTriggerOutsideRouting();
 
   async function taskScore(id: string): Promise<number | undefined> {
     const score = await (
@@ -77,12 +88,8 @@ describe("[fallback] the renewal clock with Redis", function () {
     return score === null ? undefined : Number(score);
   }
 
-  it("uses the Redis scheduler as its trigger", () => {
-    assert.equal(ActiveClock(), "redis");
-    assert.ok(
-      Runtime().settings.sweepIntervalMs >= 60 * 60 * 1000,
-      "the sweep is out of the way",
-    );
+  it("leaves the database sweep an hour away, so Redis is what fires", () => {
+    assert.ok(Runtime().settings.sweepIntervalMs >= 60 * 60 * 1000);
   });
 
   it("schedules a Redis task for the trial end, and Redis fires the renewal", async () => {

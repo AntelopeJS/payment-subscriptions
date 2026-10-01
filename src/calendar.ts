@@ -34,14 +34,6 @@ const STEPS: Record<SubscriptionInterval, Step> = {
   year: addMonths(MONTHS_PER_YEAR),
 };
 
-/**
- * Where period `index` begins, counting the period that starts at `anchor` as
- * period 0.
- *
- * Always counted from the anchor rather than from the previous boundary, so a
- * cycle anchored on the 31st ends on 28 February and then on 31 March, instead
- * of drifting to the 28th for good. UTC throughout.
- */
 export function PeriodBoundary(
   anchor: number,
   interval: SubscriptionInterval,

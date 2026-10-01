@@ -5,14 +5,8 @@ import type { Settings } from "./config";
 import { PeriodBoundary } from "./calendar";
 import type { RecordPatch, StoredEvent, SubscriptionRecord } from "./records";
 
-/** What a due subscription needs next. */
 type DecisionKind = "charge" | "settle" | "end";
 
-/**
- * A decision, pinned to the billing state it was taken in. The fingerprint is
- * what stops an outcome from being applied twice, or applied to a state that
- * has moved on: the charge it describes belongs to that state and no other.
- */
 export interface Decision {
   kind: DecisionKind;
   periodIndex: number;
@@ -20,7 +14,6 @@ export interface Decision {
   fingerprint: string;
 }
 
-/** How a charge, or a settlement read, came out. */
 export type OutcomeKind = "succeeded" | "failed" | "pending" | "error" | "end";
 
 export interface Outcome {
@@ -33,11 +26,6 @@ export interface Transition {
   events: StoredEvent[];
 }
 
-/**
- * A payment's status, read as the result of a subscription charge. An
- * off-session charge cannot ask for action, so `requires_action` is a decline;
- * nothing here authorizes without capturing, so `authorized` is still settling.
- */
 export const RESULT_OF_PAYMENT: Record<PaymentStatus, OutcomeKind> = {
   succeeded: "succeeded",
   failed: "failed",
@@ -60,12 +48,6 @@ function decision(
   return { kind, periodIndex, attempt, fingerprint: Fingerprint(record) };
 }
 
-/**
- * What a subscription whose next action has come due needs. A charge still
- * settling is read again; a subscription set to end does so at the first
- * action at or after its period end; a `past_due` one retries the period it
- * failed; anything else is charged for the next period.
- */
 export function Decide(record: SubscriptionRecord, now: number): Decision {
   if (record.pendingPayment !== null) {
     return decision(record, "settle", record.periodIndex, record.attempt);
@@ -79,7 +61,6 @@ export function Decide(record: SubscriptionRecord, now: number): Decision {
   return decision(record, "charge", record.periodIndex + 1, 0);
 }
 
-/** The idempotency key for one attempt at charging one period. */
 export function ChargeKey(
   record: SubscriptionRecord,
   decided: Decision,
@@ -210,12 +191,6 @@ const RULES: Record<OutcomeKind, Rule> = {
   end,
 };
 
-/**
- * A charge that lands on a subscription cancelled while it was in flight, or
- * that was still settling when it was cancelled. Money that moved is recorded
- * and reported, and one still settling is followed until it settles; the
- * subscription stays ended either way.
- */
 type EndedRule = (
   record: SubscriptionRecord,
   outcome: Outcome,
@@ -256,11 +231,6 @@ const ENDED_RULES: Record<OutcomeKind, EndedRule> = {
   end: () => undefined,
 };
 
-/**
- * What an outcome does to a record, or undefined if it does nothing — because
- * the record has moved on from the state the decision was taken in, which is
- * the case when another instance has already applied the same charge.
- */
 export function Apply(
   record: SubscriptionRecord,
   decided: Decision,

@@ -18,10 +18,6 @@ const BOOT_TIMEOUT_MS = 60_000;
 const MILESTONES = ["LAUNCHED", "RENEWED"];
 const CORE_PACKAGE = "@antelopejs/core";
 
-/**
- * Finds the AntelopeJS core this suite is running under — the `ajs` that
- * started it — so the child launches the same runtime.
- */
 function corePackageRoot(): string {
   let folder = path.dirname(realpathSync(process.argv[1]));
   while (folder !== path.dirname(folder)) {
@@ -79,7 +75,6 @@ function launch(folder: string): ChildProcess {
   });
 }
 
-/** Resolves with everything the child printed, once every milestone is in it or time is up. */
 function milestones(child: ChildProcess): Promise<string> {
   let output = "";
   return new Promise((resolve) => {

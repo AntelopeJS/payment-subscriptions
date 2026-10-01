@@ -2,12 +2,6 @@ const payment = require("@antelopejs/interface-payment");
 const { setTimeout: delay } = require("node:timers/promises");
 const subscriptions = require("@antelopejs/interface-subscriptions");
 
-/**
- * Runs inside a project launched the production way, with no test harness
- * stubbing missing interfaces. Prints one line per milestone, for the boot
- * test to read from stdout.
- */
-
 const TRIAL_MS = 1000;
 const POLL_MS = 100;
 const POLLS = 100;

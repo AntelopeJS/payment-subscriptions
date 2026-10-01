@@ -31,7 +31,6 @@ const START = Date.UTC(2027, 5, 1, 9);
 const MONTH_LATER = Date.UTC(2027, 6, 1, 9);
 const SECONDARY = "secondary";
 
-/** The test provider settles a pending charge on its second read; the module reads once an hour. */
 async function readSettlementTwice(clock: ManualClock): Promise<void> {
   for (const _read of [1, 2]) {
     clock.advance(HOUR_MS);

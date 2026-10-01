@@ -27,10 +27,8 @@ import {
 const WRITE_ATTEMPTS = 5;
 const NO_LEASE = 0;
 
-/** Called with every record the engine writes, so a trigger can reschedule it. */
 export type WriteListener = (record: SubscriptionRecord) => void;
 
-/** What one engine has seen, for the suite to tell a real race from a quiet one. */
 export interface EngineStats {
   claimed: number;
   claimsLost: number;
@@ -41,11 +39,6 @@ function providerOf(record: SubscriptionRecord): string | undefined {
   return record.provider === "" ? undefined : record.provider;
 }
 
-/**
- * Completes a patch: the outbox gains the transition's events, and `dueAt` —
- * the one field the sweep queries — becomes now while anything is
- * undelivered, and the next action's time otherwise.
- */
 export function Finalize(
   record: SubscriptionRecord,
   transition: Transition,
@@ -63,11 +56,6 @@ export function Finalize(
   };
 }
 
-/**
- * Merges what a caller adds to a transition — the creation event and the
- * `live` phase, for a first charge — with the transition itself. The added
- * events are snapshotted after the patch, and go first.
- */
 function Combine(
   record: SubscriptionRecord,
   transition: Transition,
@@ -84,17 +72,6 @@ function Combine(
   return { patch, events: [...leading, ...transition.events] };
 }
 
-/**
- * Renews subscriptions. One per process in production; the suite builds a
- * second to race the first.
- *
- * Every change goes through a conditional write on the record's revision. A
- * renewal is claimed by writing a lease before anything is charged, so of two
- * engines that find the same renewal due, one charges it and the other finds
- * its claim refused. The charge also carries an idempotency key derived from
- * the subscription, the period and the attempt, so an engine that takes over
- * an expired lease replays the original charge rather than making a second.
- */
 export class Engine {
   readonly instanceId = randomUUID();
   readonly stats: EngineStats = { claimed: 0, claimsLost: 0, charges: 0 };
@@ -110,12 +87,10 @@ export class Engine {
     this.listener = listener;
   }
 
-  /** Tells the trigger about a record written outside the engine. */
   notify(record: SubscriptionRecord): void {
     this.listener(record);
   }
 
-  /** Processes every subscription due by now, up to the batch size. */
   async sweep(): Promise<void> {
     const ids = await DueRecordIds(Now(), this.settings.batchSize);
     for (const id of ids) {
@@ -123,11 +98,6 @@ export class Engine {
     }
   }
 
-  /**
-   * Claims one subscription if it is due and unclaimed, does what is due,
-   * delivers its events and releases it. Never throws: a failure leaves the
-   * record due, and the next sweep picks it up.
-   */
   async process(id: string): Promise<void> {
     try {
       const claimed = await this.claim(id);
@@ -139,16 +109,11 @@ export class Engine {
     }
   }
 
-  /**
-   * Processes a subscription without making the caller wait: delivering the
-   * events a call just raised, say. Tracked, so `drain` can wait for it.
-   */
   processInBackground(id: string): void {
     const work = this.process(id).finally(() => this.inFlight.delete(work));
     this.inFlight.add(work);
   }
 
-  /** Waits for every background run to finish. */
   async drain(): Promise<void> {
     await Promise.all(this.inFlight);
   }
@@ -180,7 +145,6 @@ export class Engine {
     return committed;
   }
 
-  /** Does what the decision calls for, against the provider. */
   async perform(
     record: SubscriptionRecord,
     decided: Decision,
@@ -212,12 +176,6 @@ export class Engine {
     });
   }
 
-  /**
-   * Writes an outcome. A conflicting write means someone else changed the
-   * record meanwhile — a cancellation, say — so the record is read again and
-   * the outcome applied to what is there now. `Apply` makes that a no-op when
-   * the change was this same charge, applied by another engine.
-   */
   async commit(
     record: SubscriptionRecord,
     decided: Decision,
@@ -239,7 +197,6 @@ export class Engine {
     return current ?? record;
   }
 
-  /** Writes a patch, and tells the trigger about the result. */
   async write(
     record: SubscriptionRecord,
     patch: RecordPatch,
@@ -249,10 +206,6 @@ export class Engine {
     return written;
   }
 
-  /**
-   * Delivers whatever is in the outbox, removes what was delivered, and gives
-   * up the lease if it is still this engine's.
-   */
   async release(record: SubscriptionRecord): Promise<void> {
     const delivered = new Set(await Deliver(record.outbox));
     let current: SubscriptionRecord | undefined = record;
@@ -285,7 +238,6 @@ export class Engine {
     return patch;
   }
 
-  /** Tells the provider a subscription that has just ended is over. */
   async releaseScheduleFor(id: string): Promise<void> {
     const record = await LoadRecord(id);
     if (!record) return;

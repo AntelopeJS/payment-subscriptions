@@ -23,12 +23,6 @@ const START = Date.UTC(2027, 8, 1, 6);
 const MONTH_LATER = Date.UTC(2027, 9, 1, 6);
 const RACING_SUBSCRIPTIONS = 25;
 
-/**
- * A second instance of the module, as far as renewals go: its own engine, its
- * own instance identifier and its own lease, sharing nothing with the first
- * but the database and the payment provider — which is all two processes
- * would share.
- */
 function secondInstance(): Engine {
   const { settings, schedule } = Runtime();
   return new Engine(settings, schedule);

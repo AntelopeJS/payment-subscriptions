@@ -7,11 +7,6 @@ function present<K extends string, V>(
   return value === null ? {} : ({ [key]: value } as Record<K, V>);
 }
 
-/**
- * The subscription a caller sees. Absent fields are left out rather than set
- * to `undefined`, so the result can be stored inside an atomic patch as an
- * event snapshot.
- */
 export function ToSubscription(record: SubscriptionRecord): Snapshot {
   return {
     id: record._id,

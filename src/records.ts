@@ -9,17 +9,10 @@ import type {
   SubscriptionStatus,
 } from "@antelopejs/interface-subscriptions";
 
-/**
- * Where a record is in its own creation. Only `live` records are
- * subscriptions; the others exist so that a replayed idempotency key finds
- * the original attempt.
- */
 type Phase = "creating" | "live" | "refused";
 
-/** The fallback has no provider-side record, so it never sets `vendorData`. */
 export type Snapshot = Omit<Subscription, "vendorData">;
 
-/** An event waiting to be delivered, stored with the transition that raised it. */
 export interface StoredEvent {
   id: string;
   type: SubscriptionEventType;
@@ -28,14 +21,6 @@ export interface StoredEvent {
   payment: string | null;
 }
 
-/**
- * One subscription, as the database holds it. The database is the only
- * source of truth: everything the renewal clock needs is here, and a Redis
- * trigger only ever says "look at this record now".
- *
- * Absent values are `null` rather than missing, because an atomic patch
- * cannot carry `undefined`.
- */
 export interface SubscriptionRecord {
   _id: string;
   revision: string;
@@ -103,12 +88,6 @@ export async function LoadRecord(
   return (await table().get(id)) ?? undefined;
 }
 
-/**
- * Inserts a record under an identifier derived from the caller's idempotency
- * key, so that two racing creations with one key cannot both insert.
- *
- * @returns false if a record with that identifier already exists
- */
 export async function InsertRecord(
   record: SubscriptionRecord,
 ): Promise<boolean> {
@@ -121,17 +100,6 @@ export async function InsertRecord(
   }
 }
 
-/**
- * Applies `patch` only if the record still carries the revision it was read
- * at, installing a fresh revision with it.
- *
- * This is the one way the module changes a stored subscription, and what
- * makes a renewal claim exclusive: of two instances that read the same
- * revision, exactly one sees `applied`.
- *
- * @returns the record as written, or undefined if it was not written —
- *   whether because the revision moved or because the outcome is unknown
- */
 export async function MutateRecord(
   record: SubscriptionRecord,
   patch: RecordPatch,
@@ -148,9 +116,6 @@ export async function MutateRecord(
   return { ...record, ...patch, revision: nextRevision };
 }
 
-/**
- * Identifiers of live records with something to do by `now`, soonest first.
- */
 export async function DueRecordIds(
   now: number,
   limit: number,

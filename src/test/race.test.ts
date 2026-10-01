@@ -119,6 +119,11 @@ describe("[fallback] several instances", function () {
       "but the payer was charged once for the renewal",
     );
   });
+});
+
+describe("[fallback] instances that fall behind", function () {
+  this.timeout(SUITE_TIMEOUT);
+  const clock = useManualClock(START);
 
   it("ignores an outcome that arrives after another instance has moved the renewal on", async () => {
     const created = await subscribe(await newPayer());

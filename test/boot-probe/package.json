@@ -1,0 +1,14 @@
+{
+  "name": "@antelopejs/payment-subscriptions-boot-probe",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A consumer module for payment-subscriptions' boot test: subscribes with a short trial and reports whether it renewed. Never published.",
+  "main": "index.js",
+  "dependencies": {
+    "@antelopejs/interface-payment": "*",
+    "@antelopejs/interface-subscriptions": "*"
+  },
+  "antelopeJs": {
+    "defaultConfig": {}
+  }
+}

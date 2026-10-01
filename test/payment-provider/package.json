@@ -1,0 +1,13 @@
+{
+  "name": "@antelopejs/payment-subscriptions-test-provider",
+  "version": "0.0.0",
+  "private": true,
+  "description": "An in-memory interface-payment provider for payment-subscriptions' own suite. Never published.",
+  "main": "index.js",
+  "antelopeJs": {
+    "implements": [
+      "@antelopejs/interface-payment"
+    ],
+    "defaultConfig": {}
+  }
+}

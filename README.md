@@ -27,11 +27,20 @@ Wire it alongside:
 export default defineConfig({
   modules: {
     subscriptions: { source: { type: "package", package: "@antelopejs/payment-subscriptions" } },
-    payments: { source: { type: "package", package: "@antelopejs/stripe" }, config: { ... } },
+    payments: { source: { type: "package", package: "<your payment-interface module>" }, config: { ... } },
     mongodb: { source: { type: "package", package: "@antelopejs/mongodb" }, config: { ... } },
   },
 });
 ```
+
+### With a payment module that has subscriptions of its own
+
+`@antelopejs/stripe` implements `@antelopejs/interface-subscriptions` natively.
+Wire it alone for Stripe's own subscriptions. Wiring this module beside it makes
+two providers of the interface, and the core picks one by module id, not by
+intent. To use this module's clock with Stripe charges, say so: add
+`disabledExports: ["@antelopejs/interface-subscriptions"]` to the Stripe module's
+entry, or an `importOverrides` entry on each consumer.
 
 ## How it works
 

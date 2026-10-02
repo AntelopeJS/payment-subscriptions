@@ -14,6 +14,7 @@ import {
   SubscriptionNotFoundError,
   SubscriptionPaymentError,
   type SubscriptionRequest,
+  ValidateSubscriptionRequest,
 } from "@antelopejs/interface-subscriptions";
 
 import { Now } from "./clock";
@@ -21,7 +22,6 @@ import { Finalize } from "./engine";
 import { Runtime } from "./runtime";
 import { ToSubscription } from "./view";
 import { InitialRecord } from "./initial";
-import { ValidateRequest } from "./validation";
 import { Decide, type Transition } from "./transitions";
 import { RaiseEvent, RegisterHandler, UnregisterHandler } from "./events";
 import {
@@ -181,7 +181,7 @@ async function CreateSubscription(
   provider?: string,
 ): Promise<Subscription> {
   const { engine, settings, schedule } = Runtime();
-  ValidateRequest(request, Now());
+  ValidateSubscriptionRequest(request, Now());
   const id = subscriptionId(idempotencyKey, provider);
   if (await LoadRecord(id)) return replayCreation(id, provider);
   const record = InitialRecord(request, {

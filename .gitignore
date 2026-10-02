@@ -372,3 +372,7 @@ $RECYCLE.BIN/
 .pnpm-store
 
 .idea
+
+# Core dumps
+core
+core.[0-9]*

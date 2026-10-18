@@ -30,6 +30,7 @@ jobs:
           files: |
             README.md
             docs
+          typescript-project: docs/tsconfig.json
       - run: pnpm prepack
       - run: pnpm test
       - run: pnpm lint

@@ -10,7 +10,7 @@ type SchedulerModule = typeof import("@antelopejs/interface-redis-scheduler");
 
 const REDIS_INTERFACE = "@antelopejs/interface-redis";
 const SCHEDULER_INTERFACE = "@antelopejs/interface-redis-scheduler";
-export const HANDLER_NAME = "payment-subscriptions";
+const HANDLER_NAME = "payment-subscriptions";
 const LISTENER_STOP_TIMEOUT_MS = 2_000;
 
 export interface Trigger {
@@ -79,7 +79,7 @@ function withTimeout(work: Promise<void>, ms: number): Promise<void> {
   ]);
 }
 
-export function RedisTrigger(
+function RedisTrigger(
   engine: Engine,
   settings: Settings,
   scheduler: SchedulerModule,

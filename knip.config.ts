@@ -6,7 +6,6 @@ export default antelopeKnipConfig({
     "src/test/antelope.test.ts",
     "test/payment-provider/index.js",
     "test/boot-probe/index.js",
-    "src/test/redis-routing.ts",
   ],
   ignoreBinaries: ["ajs"],
 });

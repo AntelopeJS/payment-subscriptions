@@ -37,7 +37,11 @@ export default defineConfig({
   name: "billing-project",
   modules: {
     subscriptions: {
-      source: { type: "package", package: "@antelopejs/payment-subscriptions" },
+      source: {
+        type: "package",
+        package: "@antelopejs/payment-subscriptions",
+        version: "^0.0.2",
+      },
     },
     stripe: {
       source: {

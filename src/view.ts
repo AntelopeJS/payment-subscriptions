@@ -1,4 +1,5 @@
-import type { Snapshot, SubscriptionRecord } from "./records";
+import type { Subscription } from "@antelopejs/interface-subscriptions";
+import type { SubscriptionRecord } from "./records";
 
 function present<K extends string, V>(
   key: K,
@@ -7,8 +8,14 @@ function present<K extends string, V>(
   return value === null ? {} : ({ [key]: value } as Record<K, V>);
 }
 
-export function ToSubscription(record: SubscriptionRecord): Snapshot {
+export function ToSubscription(record: SubscriptionRecord): Subscription {
   return {
+    vendorData: {
+      reconciliationRequired: record.reconciliationRequired ?? false,
+      attemptStartedAt: record.attemptStartedAt ?? null,
+      attemptReplayUntil: record.attemptReplayUntil ?? null,
+      phase: record.phase,
+    },
     id: record._id,
     reference: record.reference,
     customer: record.customer,

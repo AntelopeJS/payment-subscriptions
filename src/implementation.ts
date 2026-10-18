@@ -85,13 +85,29 @@ async function completeCreation(
     .perform(record, decided)
     .catch(wrapProviderFailure);
   if (outcome.kind === "error") {
-    await engine.write(record, { leaseOwner: null, leaseUntil: 0 });
+    const current = await LoadRecord(record._id);
+    if (current)
+      await engine.write(current, { leaseOwner: null, leaseUntil: 0 });
     throw new SubscriptionError(
       "The payment provider could not be reached; replay the idempotency key to retry",
     );
   }
+  if (outcome.kind === "reconcile") {
+    const current = await LoadRecord(record._id);
+    if (current)
+      await engine.write(current, {
+        reconciliationRequired: true,
+        nextActionAt: null,
+        dueAt: null,
+        leaseOwner: null,
+        leaseUntil: 0,
+      });
+    throw new SubscriptionError(
+      `Subscription ${record._id} requires reconciliation; charge replay protection unavailable or expired`,
+    );
+  }
   if (outcome.kind === "failed") {
-    await engine.write(record, {
+    await engine.write((await LoadRecord(record._id)) ?? record, {
       phase: "refused",
       refusedPayment: outcome.payment,
       refusal: outcome.reason ?? null,
@@ -181,9 +197,10 @@ async function CreateSubscription(
   provider?: string,
 ): Promise<Subscription> {
   const { engine, settings, schedule } = Runtime();
-  ValidateSubscriptionRequest(request, Now());
+  ValidateSubscriptionRequest(request);
   const id = subscriptionId(idempotencyKey, provider);
   if (await LoadRecord(id)) return replayCreation(id, provider);
+  ValidateSubscriptionRequest(request, Now());
   const record = InitialRecord(request, {
     id,
     provider: providerKey(provider),
@@ -269,6 +286,9 @@ const CANCELLATIONS: Record<CancellationTiming, Change> = {
       status: "canceled" as const,
       endedAt: now,
       endReason: "requested" as const,
+      reconciliationRequired:
+        record.reconciliationRequired ||
+        (record.pendingPayment === null && record.attemptMethod !== null),
       nextActionAt: record.pendingPayment === null ? null : record.nextActionAt,
     };
     const ended = { ...record, ...patch };

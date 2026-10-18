@@ -5,6 +5,11 @@ const DAY_MS = 24 * HOUR_MS;
 
 /** The module's configuration. Every field is optional. */
 export interface Config {
+  /** Guaranteed provider replay retention, in milliseconds. Default zero (no replay).
+   * Must be safe for every payment account wired to this module; include a safety margin.
+   * Persisted per attempt so later configuration changes cannot extend protection.
+   */
+  guaranteedReplayMs?: number;
   /**
    * How often the database is polled for due renewals when no Redis
    * scheduler is wired. Default one minute: a renewal is charged at most this
@@ -20,7 +25,8 @@ export interface Config {
   /**
    * How long an instance holds its claim on a renewal while charging it.
    * Another instance takes the renewal over only after this has passed, and
-   * charges it with the same idempotency key. Default five minutes.
+   * may replay with the same key only within guaranteedReplayMs; otherwise it
+   * halts for reconciliation. Default five minutes.
    */
   leaseMs?: number;
   /**
@@ -37,7 +43,8 @@ export interface Config {
   settlementPollMs?: number;
   /**
    * How long to wait before retrying when the payment provider could not be
-   * reached at all — not a decline. Default five minutes.
+   * reached at all — not a decline. Replays require unexpired persisted
+   * protection; known payment IDs are read only. Default five minutes.
    */
   errorBackoffMs?: number;
   /** How many due subscriptions one sweep takes on. Default 100. */
@@ -52,6 +59,7 @@ export interface Config {
 export type Settings = Required<Config>;
 
 const DEFAULT_SETTINGS: Settings = Object.freeze({
+  guaranteedReplayMs: 0,
   pollIntervalMs: MINUTE_MS,
   sweepIntervalMs: 15 * MINUTE_MS,
   leaseMs: 5 * MINUTE_MS,
@@ -63,6 +71,15 @@ const DEFAULT_SETTINGS: Settings = Object.freeze({
 });
 
 export function ResolveSettings(config: Config = {}): Settings {
+  if (
+    config.guaranteedReplayMs !== undefined &&
+    (!Number.isFinite(config.guaranteedReplayMs) ||
+      config.guaranteedReplayMs < 0)
+  ) {
+    throw new Error(
+      "guaranteedReplayMs must be a finite non-negative duration",
+    );
+  }
   const defined = Object.entries(config).filter(
     ([, value]) => value !== undefined,
   );

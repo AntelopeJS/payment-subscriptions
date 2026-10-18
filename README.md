@@ -92,6 +92,21 @@ capability API and no assumed Stripe-style 24-hour window. See
 
 ## Testing
 
+Until the interfaces are published, Git submodules pin their reviewed source commits and the pnpm workspace resolves them locally:
+
+```bash
+git submodule update --init
+pnpm install --frozen-lockfile
+pnpm --filter @antelopejs/interface-payment build
+pnpm --filter @antelopejs/interface-subscriptions build
+pnpm test
+pnpm lint
+pnpm format:check
+pnpm knip
+```
+
+CI uses the same source revisions and frozen lockfile without private Git credentials or Stripe keys. The published manifest retains npm version ranges. Before releasing this provider, publish both interfaces, remove the source submodules and workspace overrides, regenerate the standalone lockfile, and rerun CI against the published packages.
+
 `pnpm test` runs the suite twice, once per clock, against a real MongoDB and —
 for the second run — a real Redis, both started by the suite. The interface's
 conformance suite runs in both. A test-only payment provider in

@@ -376,3 +376,6 @@ $RECYCLE.BIN/
 # Core dumps
 core
 core.[0-9]*
+
+# Dependency submodules are pinned by Git, not formatted as first-party code.
+.ci/dependencies/

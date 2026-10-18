@@ -1,7 +1,11 @@
 # @antelopejs/payment-subscriptions
 
-[![npm version](https://img.shields.io/npm/v/@antelopejs/payment-subscriptions.svg)](https://www.npmjs.com/package/@antelopejs/payment-subscriptions)
-[![license](https://img.shields.io/npm/l/@antelopejs/payment-subscriptions.svg)](./LICENSE)
+<div align="center">
+<a href="https://www.npmjs.com/package/@antelopejs/payment-subscriptions"><img alt="npm" src="https://img.shields.io/npm/v/@antelopejs/payment-subscriptions?style=for-the-badge&labelColor=000000&color=000000"></a>
+<a href="./LICENSE"><img alt="License" src="https://img.shields.io/npm/l/@antelopejs/payment-subscriptions?style=for-the-badge&labelColor=000000&color=000000"></a>
+<a href="https://discord.gg/sjK28QHrA7"><img alt="Discord" src="https://img.shields.io/badge/Discord-18181B?logo=discord&style=for-the-badge&color=000000"></a>
+<a href="./docs/1.introduction.md"><img alt="Docs" src="https://img.shields.io/badge/Docs-18181B?style=for-the-badge&color=000000"></a>
+</div>
 
 Subscriptions for any AntelopeJS payment provider. Implements
 `@antelopejs/interface-subscriptions` on top of `@antelopejs/interface-payment`,
@@ -13,6 +17,7 @@ Checkout.com, Mangopay), and for any provider at all.
 
 ```bash
 ajs project modules add @antelopejs/payment-subscriptions
+ajs project modules install
 ```
 
 Wire it alongside:
@@ -23,12 +28,39 @@ Wire it alongside:
 - optionally, `@antelopejs/redis`, for renewals charged on time rather than
   within one poll.
 
-```ts
+The example below deliberately selects the generic scheduler with Stripe payments and MongoDB storage. For Stripe-native billing, use Stripe alone instead. Supply the three environment variables before startup.
+
+```typescript [antelope.config.ts] docs-check
+import { defineConfig } from "@antelopejs/interface-core/config";
+
 export default defineConfig({
+  name: "billing-project",
   modules: {
-    subscriptions: { source: { type: "package", package: "@antelopejs/payment-subscriptions" } },
-    payments: { source: { type: "package", package: "<your payment-interface module>" }, config: { ... } },
-    mongodb: { source: { type: "package", package: "@antelopejs/mongodb" }, config: { ... } },
+    subscriptions: {
+      source: { type: "package", package: "@antelopejs/payment-subscriptions" },
+    },
+    stripe: {
+      source: {
+        type: "package",
+        package: "@antelopejs/stripe",
+        version: "^1.1.0",
+      },
+      disabledExports: ["@antelopejs/interface-subscriptions"],
+      config: { apiKey: "REPLACE_VIA_ENV", webhookSecret: "REPLACE_VIA_ENV" },
+    },
+    mongodb: {
+      source: {
+        type: "package",
+        package: "@antelopejs/mongodb",
+        version: "^1.4.2",
+      },
+      config: { url: "REPLACE_VIA_ENV", database: "billing" },
+    },
+  },
+  envOverrides: {
+    STRIPE_SECRET_KEY: "modules.stripe.config.apiKey",
+    STRIPE_WEBHOOK_SECRET: "modules.stripe.config.webhookSecret",
+    MONGODB_URL: "modules.mongodb.config.url",
   },
 });
 ```
@@ -90,6 +122,26 @@ capability API and no assumed Stripe-style 24-hour window. See
 | [Failed renewals](./docs/3.failed-renewals.md)         | The retry policy, settling charges, an unreachable provider |
 | [The provider schedule](./docs/4.provider-schedule.md) | The seam for providers that store a schedule (Mangopay)     |
 
+## Compatibility
+
+<!-- docs-compat: ./package.json#dependencies -->
+
+| Package                               | Range            |
+| ------------------------------------- | ---------------- |
+| `@antelopejs/interface-core`          | `>=0.0.5 <1.0.0` |
+| `@antelopejs/interface-database`      | `^0.1.8`         |
+| `@antelopejs/interface-payment`       | `>=0.0.2 <1.0.0` |
+| `@antelopejs/interface-subscriptions` | `>=0.0.2 <0.1.0` |
+
+<!-- docs-compat: ./package.json#optionalDependencies -->
+
+| Package                                 | Range            |
+| --------------------------------------- | ---------------- |
+| `@antelopejs/interface-redis`           | `>=0.0.6 <1.0.0` |
+| `@antelopejs/interface-redis-scheduler` | `>=0.0.7 <1.0.0` |
+
+These are the manifest's interface requirements. Provider modules can impose additional requirements; the example above uses Stripe 1.1 and MongoDB 1.4.
+
 ## Testing
 
 `pnpm test` runs the suite twice, once per clock, against a real MongoDB and —
@@ -98,6 +150,20 @@ conformance suite runs in both. A test-only payment provider in
 `test/payment-provider` stands in for the payment module; it is never published.
 The scripts use the local AntelopeJS core 1.16.0 runner (`ajs module test .`).
 
+## Contributing
+
+Read [CONTRIBUTING.md](./CONTRIBUTING.md). Use Node.js 24 and pnpm 10.6.5:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm test
+pnpm lint
+pnpm format:check
+pnpm knip
+```
+
+The first test run downloads MongoDB and builds Redis, so it needs network access and a local C/C++ build toolchain. No Stripe credentials are required.
+
 ## License
 
-Apache-2.0
+[Apache-2.0](./LICENSE)

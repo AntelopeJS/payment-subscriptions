@@ -20,15 +20,16 @@ const PAYMENT_ENV = {
   ANTELOPE_PAYMENT_TEST_CURRENCY: "EUR",
 };
 
-const EXIT_GRACE_MS = 2_000;
-
 let mongod: MongoMemoryServer | undefined;
+let redis: RedisMemoryServer | undefined;
+const EXIT_GRACE_MS = 2_000;
 
 function exitOnceSchedulerTimerIsAllThatIsLeft(): void {
   if (CLOCK !== "redis") return;
-  setTimeout(() => process.exit(), EXIT_GRACE_MS).unref();
+  // Scheduler 0.0.7 quits its subscriber but leaves its long-lived timer referenced.
+  // Core 1.16.0 still hangs after successful cleanup. Preserve the runner's failure code.
+  setTimeout(() => process.exit(process.exitCode), EXIT_GRACE_MS).unref();
 }
-let redis: RedisMemoryServer | undefined;
 
 async function redisModules(): Promise<Record<string, AntelopeModuleConfig>> {
   if (CLOCK !== "redis") return {};
@@ -77,6 +78,7 @@ export default defineConfig({
           local: {
             config: {
               pollIntervalMs: TEST_POLL_MS,
+              guaranteedReplayMs: 60 * 60 * 1000,
               sweepIntervalMs: CLOCK === "redis" ? HOUR_MS : TEST_POLL_MS,
             },
           },

@@ -1,8 +1,8 @@
 ---
 name: payment-subscriptions
-description: The generic AntelopeJS subscriptions module — implements @antelopejs/interface-subscriptions on top of any @antelopejs/interface-payment provider, keeps subscriptions in @antelopejs/interface-database, and fires renewals itself (Redis scheduler if wired, database polling if not). Use when wiring "@antelopejs/payment-subscriptions" into a project, when a payment provider has no native subscriptions (Adyen, Checkout.com, Mangopay), when configuring its retry policy, poll interval or lease, or when debugging a renewal that was late, charged twice, or never charged.
-category: antelopejs-module
-tags: [subscriptions, billing, recurring, payment, scheduler, antelopejs]
+description: Guides wiring the generic payment-subscriptions fallback, configuring bounded charge recovery, and diagnosing stalled renewals or reconciliation holds. Use when a payment provider lacks native subscriptions or the merchant explicitly chooses a locally owned renewal clock.
+metadata:
+  category: antelopejs-module
 ---
 
 # payment-subscriptions
@@ -11,7 +11,14 @@ Implements the subscriptions interface for any payment provider. Consumers code
 against `@antelopejs/interface-subscriptions` (see its skill); this module is
 what you wire.
 
+Prefer Stripe's native subscriptions for Stripe users. Use this module only as
+an explicit fallback, disabling Stripe's subscriptions export or configuring
+consumer import overrides so just one implementation owns each subscription.
+
 ## Wiring
+
+Run `ajs project modules add @antelopejs/payment-subscriptions` in a project.
+For an embedded runtime, add the module to the host runtime configuration instead.
 
 ```ts
 modules: {
@@ -24,16 +31,17 @@ modules: {
 
 ## Config (all optional)
 
-| Field              | Default             | Meaning                                                    |
-| ------------------ | ------------------- | ---------------------------------------------------------- |
-| `pollIntervalMs`   | 60 000              | Database poll without Redis: max lateness of a renewal     |
-| `sweepIntervalMs`  | 900 000             | Database sweep with Redis: catches tasks Redis lost        |
-| `leaseMs`          | 300 000             | How long one instance's claim on a renewal lasts           |
-| `retryDelaysMs`    | 1d, 3d, 7d          | Retries after a failed renewal, then it ends               |
-| `settlementPollMs` | 3 600 000           | How often a still-settling charge is read again            |
-| `errorBackoffMs`   | 300 000             | Retry delay when the payment provider is unreachable       |
-| `batchSize`        | 100                 | Due subscriptions handled per sweep                        |
-| `providerSchedule` | `payment-interface` | Mirror the schedule with the provider (seam; one schedule) |
+| Field                | Default             | Meaning                                                                           |
+| -------------------- | ------------------- | --------------------------------------------------------------------------------- |
+| `pollIntervalMs`     | 60 000              | Database poll without Redis: max lateness of a renewal                            |
+| `sweepIntervalMs`    | 900 000             | Database sweep with Redis: catches tasks Redis lost                               |
+| `leaseMs`            | 300 000             | How long one instance's claim on a renewal lasts                                  |
+| `retryDelaysMs`      | 1d, 3d, 7d          | Retries after a failed renewal, then it ends                                      |
+| `settlementPollMs`   | 3 600 000           | How often a still-settling charge is read again                                   |
+| `errorBackoffMs`     | 300 000             | Retry delay when the payment provider is unreachable                              |
+| `batchSize`          | 100                 | Due subscriptions handled per sweep                                               |
+| `providerSchedule`   | `payment-interface` | Mirror the schedule with the provider (seam; one schedule)                        |
+| `guaranteedReplayMs` | `0`                 | Verified provider replay retention with a safety margin; default allows no replay |
 
 ## Facts to reason from when debugging
 
@@ -47,10 +55,15 @@ modules: {
   with different attempts are deliberate retries, not duplicates.
 - **Late renewal without Redis** is expected up to `pollIntervalMs`.
 - **The log line `renewal clock is polling|redis`** at start says which trigger
-  is in use. With `@antelopejs/redis` 1.0.3 and core 1.10 the scheduler refuses
-  the handler, a warning says so, and the module polls.
-- **An unreachable provider** changes nothing and retries after `errorBackoffMs`
-  with the same key; a decline makes the subscription `past_due`.
+  is in use. Core 1.16.0 supports the published Redis scheduler through normal
+  routing; a handler-registration failure logs a warning and falls back to polling.
+- **An uncertain charge** retries with the pinned method and same key only
+  strictly before persisted `attemptReplayUntil`. Verify retention for every
+  account before setting `guaranteedReplayMs`; never assume Stripe's duration.
+- **A reconciliation hold** appears in `vendorData.reconciliationRequired` and
+  logs. Unknown expired or legacy attempts halt; known pending IDs are read only.
+  Method updates and cancellation do not restart held charges. Before repairing
+  state, follow [operational recovery](../../docs/3.failed-renewals.md#reconciliation-and-operational-recovery).
 - **Payment charges carry `metadata.antelopeSubscription`.**
 
 ## Not in this module

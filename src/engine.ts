@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Logging } from "@antelopejs/interface-core/logging";
+import { SubscriptionError } from "@antelopejs/interface-subscriptions";
 import {
   CustomerNotFoundError,
   GetPayment,
@@ -41,6 +42,21 @@ const REFUSALS = [
 
 function isRefusal(error: PaymentError): boolean {
   return REFUSALS.some((refusal) => error instanceof refusal);
+}
+
+function replayExpired(record: SubscriptionRecord): boolean {
+  return (
+    record.attemptReplayUntil == null || Now() >= record.attemptReplayUntil
+  );
+}
+
+function isFreshAttempt(record: SubscriptionRecord): boolean {
+  // The old live engine pinned the method before every charge, but creation did not.
+  return (
+    record.attemptMethod === null &&
+    (record.attemptStartedAt === null ||
+      (record.attemptStartedAt === undefined && record.phase === "live"))
+  );
 }
 const NO_LEASE = 0;
 
@@ -115,7 +131,15 @@ export class Engine {
     }
   }
 
-  async process(id: string): Promise<void> {
+  process(id: string): Promise<void> {
+    const work = this.processClaimed(id).finally(() =>
+      this.inFlight.delete(work),
+    );
+    this.inFlight.add(work);
+    return work;
+  }
+
+  private async processClaimed(id: string): Promise<void> {
     try {
       const claimed = await this.claim(id);
       if (!claimed) return;
@@ -127,8 +151,7 @@ export class Engine {
   }
 
   processInBackground(id: string): void {
-    const work = this.process(id).finally(() => this.inFlight.delete(work));
-    this.inFlight.add(work);
+    void this.process(id);
   }
 
   async drain(): Promise<void> {
@@ -156,10 +179,8 @@ export class Engine {
     if (record.nextActionAt === null || record.nextActionAt > now)
       return record;
     const decided = Decide(record, now);
-    const attempting = await this.pinAttemptMethod(record, decided);
-    if (!attempting) return (await LoadRecord(record._id)) ?? record;
-    const outcome = await this.perform(attempting, decided);
-    const committed = await this.commit(attempting, decided, outcome);
+    const outcome = await this.perform(record, decided);
+    const committed = await this.commit(record, decided, outcome);
     if (record.status !== "canceled" && committed.status === "canceled") {
       await this.releaseScheduleFor(record._id);
     }
@@ -170,10 +191,15 @@ export class Engine {
     record: SubscriptionRecord,
     decided: Decision,
   ): Promise<SubscriptionRecord | undefined> {
-    if (decided.kind !== "charge" || record.attemptMethod !== null) {
+    if (decided.kind !== "charge" || !isFreshAttempt(record)) {
       return record;
     }
-    return this.write(record, { attemptMethod: record.paymentMethod });
+    const now = Now();
+    return this.write(record, {
+      attemptMethod: record.paymentMethod,
+      attemptStartedAt: now,
+      attemptReplayUntil: now + this.settings.guaranteedReplayMs,
+    });
   }
 
   async perform(
@@ -181,6 +207,29 @@ export class Engine {
     decided: Decision,
   ): Promise<Outcome> {
     if (decided.kind === "end") return { kind: "end", payment: null };
+    if (decided.kind === "charge") {
+      const fresh = isFreshAttempt(record);
+      if (record.reconciliationRequired || (!fresh && replayExpired(record))) {
+        Logging.Error(
+          `payment-subscriptions: reconciliation required for ${record._id}; charge replay protection unavailable or expired`,
+        );
+        return { kind: "reconcile", payment: null };
+      }
+      const pinned = await this.pinAttemptMethod(record, decided);
+      if (!pinned)
+        throw new Error(`Subscription ${record._id} changed before charging`);
+      record = pinned;
+      // A process can stall even between the durable write and the provider call.
+      if (
+        (!fresh || this.settings.guaranteedReplayMs > 0) &&
+        Now() >= record.attemptReplayUntil!
+      ) {
+        Logging.Error(
+          `payment-subscriptions: reconciliation required for ${record._id}; charge replay protection expired before dispatch`,
+        );
+        return { kind: "reconcile", payment: null };
+      }
+    }
     try {
       const payment =
         decided.kind === "settle"
@@ -189,9 +238,15 @@ export class Engine {
       return { kind: RESULT_OF_PAYMENT[payment.status], payment: payment.id };
     } catch (error) {
       if (!(error instanceof PaymentError)) throw error;
-      const kind = isRefusal(error) ? "failed" : "error";
+      const kind = isRefusal(error)
+        ? decided.kind === "settle"
+          ? "reconcile"
+          : "failed"
+        : decided.kind === "charge" && replayExpired(record)
+          ? "reconcile"
+          : "error";
       Logging.Warn(
-        `payment-subscriptions: the provider ${kind === "failed" ? "refused" : "could not take"} ${record._id}'s charge`,
+        `payment-subscriptions: ${kind === "reconcile" ? "reconciliation required for" : kind === "failed" ? "the provider refused" : "the provider could not take"} ${record._id}'s charge`,
         error.message,
       );
       return { kind, payment: null, reason: error.message };
@@ -217,7 +272,8 @@ export class Engine {
     outcome: Outcome,
     extra: Partial<Transition> = {},
   ): Promise<SubscriptionRecord> {
-    let current: SubscriptionRecord | undefined = record;
+    // Dispatch can persist an attempt before the outcome is ready to commit.
+    let current = await LoadRecord(record._id);
     for (let attempt = 0; attempt < WRITE_ATTEMPTS && current; attempt += 1) {
       const now = Now();
       const transition = Apply(current, decided, outcome, now, this.settings);
@@ -229,7 +285,9 @@ export class Engine {
       if (written) return written;
       current = await LoadRecord(record._id);
     }
-    return current ?? record;
+    throw new SubscriptionError(
+      `Could not persist the payment outcome for subscription ${record._id}; replay the original idempotency key to recover`,
+    );
   }
 
   async write(

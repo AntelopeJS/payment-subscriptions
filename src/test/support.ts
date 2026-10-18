@@ -20,6 +20,9 @@ import { Runtime } from "../runtime";
 import { start, stop } from "../index";
 import { type Clock, SYSTEM_CLOCK, UseClock } from "../clock";
 
+// Quiesce renewals before the runner tears down the database provider.
+after(() => stop());
+
 const SECOND_MS = 1000;
 export const MINUTE_MS = 60 * SECOND_MS;
 export const HOUR_MS = 60 * MINUTE_MS;

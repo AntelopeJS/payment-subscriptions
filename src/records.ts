@@ -49,6 +49,9 @@ export interface SubscriptionRecord {
   refusedPayment: string | null;
   refusal: string | null;
   attemptMethod: string | null;
+  attemptStartedAt?: number | null;
+  attemptReplayUntil?: number | null;
+  reconciliationRequired?: boolean;
   providerReference: string | null;
   nextActionAt: number | null;
   dueAt: number | null;

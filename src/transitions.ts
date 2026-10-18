@@ -14,7 +14,13 @@ export interface Decision {
   fingerprint: string;
 }
 
-export type OutcomeKind = "succeeded" | "failed" | "pending" | "error" | "end";
+export type OutcomeKind =
+  | "succeeded"
+  | "failed"
+  | "pending"
+  | "error"
+  | "end"
+  | "reconcile";
 
 export interface Outcome {
   kind: OutcomeKind;
@@ -124,6 +130,9 @@ const succeeded: Rule = (record, decided, outcome, now) => {
     attempt: 0,
     pendingPayment: null,
     attemptMethod: null,
+    attemptStartedAt: null,
+    attemptReplayUntil: null,
+    reconciliationRequired: false,
     latestPayment: outcome.payment,
     nextActionAt: paid.currentPeriodEnd!,
   };
@@ -137,6 +146,9 @@ const failed: Rule = (record, decided, outcome, now, settings) => {
     ...period(record, decided.periodIndex),
     pendingPayment: null,
     attemptMethod: null,
+    attemptStartedAt: null,
+    attemptReplayUntil: null,
+    reconciliationRequired: false,
     latestPayment: outcome.payment ?? record.latestPayment,
   };
   const occurrence = attemptOccurrence(outcome, decided);
@@ -188,6 +200,8 @@ const unreachable: Rule = (_record, _decided, _outcome, now, settings) => ({
 
 const end: Rule = (record, _decided, _outcome, now) => {
   const patch: RecordPatch = {
+    reconciliationRequired:
+      record.reconciliationRequired || record.attemptMethod !== null,
     status: "canceled",
     endedAt: record.currentPeriodEnd,
     endReason: "requested",
@@ -199,6 +213,10 @@ const end: Rule = (record, _decided, _outcome, now) => {
 };
 
 const RULES: Record<OutcomeKind, Rule> = {
+  reconcile: () => ({
+    patch: { reconciliationRequired: true, nextActionAt: null },
+    events: [],
+  }),
   succeeded,
   failed,
   pending,
@@ -216,10 +234,17 @@ type EndedRule = (
 const SETTLED_ON_ENDED: RecordPatch = {
   pendingPayment: null,
   attemptMethod: null,
+  attemptStartedAt: null,
+  attemptReplayUntil: null,
+  reconciliationRequired: false,
   nextActionAt: null,
 };
 
 const ENDED_RULES: Record<OutcomeKind, EndedRule> = {
+  reconcile: () => ({
+    patch: { reconciliationRequired: true, nextActionAt: null },
+    events: [],
+  }),
   succeeded: (record, outcome, now) =>
     withEvents(
       record,
@@ -246,11 +271,15 @@ const ENDED_RULES: Record<OutcomeKind, EndedRule> = {
   error: (record, _outcome, now, settings) => ({
     patch:
       record.pendingPayment === null
-        ? { ...SETTLED_ON_ENDED }
+        ? {
+            reconciliationRequired:
+              record.reconciliationRequired || record.attemptMethod !== null,
+            nextActionAt: null,
+          }
         : { nextActionAt: now + settings.errorBackoffMs },
     events: [],
   }),
-  end: () => ({ patch: { ...SETTLED_ON_ENDED }, events: [] }),
+  end: () => ({ patch: { nextActionAt: null }, events: [] }),
 };
 
 export function Apply(

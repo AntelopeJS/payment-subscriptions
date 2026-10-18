@@ -8,7 +8,6 @@ import {
 
 import { Runtime } from "../runtime";
 import { ActiveClock } from "../index";
-import { useRedisTriggerOutsideRouting } from "./redis-routing";
 import { CLOCK_UNDER_TEST, chargesMade, newPayer, subscribe } from "./support";
 
 const TRIAL_MS = 1500;
@@ -68,18 +67,17 @@ describe("[fallback] the renewal clock with Redis wired, as published", function
     if (CLOCK_UNDER_TEST !== "redis") this.skip();
   });
 
-  it("polls, because the published scheduler refuses the renewal handler", () => {
-    assert.equal(ActiveClock(), "polling");
+  it("uses the published scheduler through normal interface routing", () => {
+    assert.equal(ActiveClock(), "redis");
   });
 });
 
-describe("[fallback] the Redis trigger, with its handler registered outside the routing", function () {
+describe("[fallback] the Redis trigger through public routing", function () {
   this.timeout(WAIT_MS * 3);
 
   before(function () {
     if (CLOCK_UNDER_TEST !== "redis") this.skip();
   });
-  useRedisTriggerOutsideRouting();
 
   async function taskScore(id: string): Promise<number | undefined> {
     const score = await (

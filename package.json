@@ -79,7 +79,7 @@
   },
   "optionalDependencies": {
     "@antelopejs/interface-redis": ">=0.0.6 <1.0.0",
-    "@antelopejs/interface-redis-scheduler": ">=0.0.7 <1.0.0"
+    "@antelopejs/interface-redis-scheduler": ">=0.0.9 <1.0.0"
   },
   "packageManager": "pnpm@10.6.5",
   "antelopeJs": {

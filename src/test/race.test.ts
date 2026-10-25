@@ -78,46 +78,48 @@ describe("[fallback] several instances", function () {
 
   it("replays the original charge when an instance takes over an expired claim", async () => {
     const created = await subscribe(await newPayer());
-    clock.advanceTo(MONTH_LATER);
 
-    const due = (await LoadRecord(created.id))!;
-    const crashed = (await MutateRecord(due, {
-      leaseOwner: "an-instance-that-dies-mid-charge",
-      leaseUntil: MONTH_LATER + Runtime().settings.leaseMs,
-    }))!;
-    const crashedCharge = await Runtime().engine.perform(
-      crashed,
-      Decide(crashed, MONTH_LATER),
-    );
+    await withTriggerStopped(async () => {
+      clock.advanceTo(MONTH_LATER);
+      const due = (await LoadRecord(created.id))!;
+      const crashed = (await MutateRecord(due, {
+        leaseOwner: "an-instance-that-dies-mid-charge",
+        leaseUntil: MONTH_LATER + Runtime().settings.leaseMs,
+      }))!;
+      const crashedCharge = await Runtime().engine.perform(
+        crashed,
+        Decide(crashed, MONTH_LATER),
+      );
 
-    const survivor = secondInstance();
-    await survivor.process(created.id);
-    assert.equal(
-      (await GetSubscription(created.id)).currentPeriodStart,
-      START,
-      "nobody may take a claim over before it expires",
-    );
+      const survivor = secondInstance();
+      await survivor.process(created.id);
+      assert.equal(
+        (await GetSubscription(created.id)).currentPeriodStart,
+        START,
+        "nobody may take a claim over before it expires",
+      );
 
-    clock.advance(Runtime().settings.leaseMs + MINUTE_MS);
-    await survivor.process(created.id);
-    const renewed = await GetSubscription(created.id);
+      clock.advance(Runtime().settings.leaseMs + MINUTE_MS);
+      await survivor.process(created.id);
+      const renewed = await GetSubscription(created.id);
 
-    assert.equal(renewed.currentPeriodStart, MONTH_LATER);
-    assert.equal(
-      renewed.latestPayment,
-      crashedCharge.payment,
-      "the takeover found the original charge",
-    );
-    assert.equal(
-      attemptsFor(created.id, 1),
-      2,
-      "both instances asked the provider",
-    );
-    assert.equal(
-      chargesMade(created.id).length,
-      2,
-      "but the payer was charged once for the renewal",
-    );
+      assert.equal(renewed.currentPeriodStart, MONTH_LATER);
+      assert.equal(
+        renewed.latestPayment,
+        crashedCharge.payment,
+        "the takeover found the original charge",
+      );
+      assert.equal(
+        attemptsFor(created.id, 1),
+        2,
+        "both instances asked the provider",
+      );
+      assert.equal(
+        chargesMade(created.id).length,
+        2,
+        "but the payer was charged once for the renewal",
+      );
+    });
   });
 });
 

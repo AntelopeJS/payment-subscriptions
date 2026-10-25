@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { GetClient } from "@antelopejs/interface-redis";
+import { runTasks } from "@antelopejs/interface-redis-scheduler";
 import { setTimeout as delay } from "node:timers/promises";
 import {
   GetSubscription,
@@ -8,7 +9,15 @@ import {
 
 import { Runtime } from "../runtime";
 import { ActiveClock } from "../index";
-import { CLOCK_UNDER_TEST, chargesMade, newPayer, subscribe } from "./support";
+import {
+  CLOCK_UNDER_TEST,
+  SUITE_TIMEOUT,
+  chargesMade,
+  newPayer,
+  subscribe,
+  useManualClock,
+  withTriggerStopped,
+} from "./support";
 
 const TRIAL_MS = 1500;
 const WAIT_MS = 8_000;
@@ -16,6 +25,8 @@ const POLL_MS = 50;
 const REDIS_TASKS = "SchedulerUtil.Tasks";
 const TASK_PREFIX = "payment-subscriptions:";
 const SCHEDULING_SLACK_MS = 50;
+const START = Date.UTC(2027, 8, 1, 6);
+const MONTH_LATER = Date.UTC(2027, 9, 1, 6);
 
 async function waitFor<T>(
   read: () => Promise<T>,
@@ -133,5 +144,33 @@ describe("[fallback] the Redis trigger through public routing", function () {
       isRenewed(await GetSubscription(created.id)),
       "the database sweep renews it",
     );
+  });
+});
+
+describe("[fallback] the Redis trigger while the module is stopped", function () {
+  this.timeout(SUITE_TIMEOUT);
+  const clock = useManualClock(START);
+
+  before(function () {
+    if (CLOCK_UNDER_TEST !== "redis") this.skip();
+  });
+
+  it("renews nothing when the scheduler fires a due task after stop", async () => {
+    const created = await subscribe(await newPayer());
+
+    await withTriggerStopped(async () => {
+      clock.advanceTo(MONTH_LATER);
+      await (
+        await GetClient()
+      ).zadd(REDIS_TASKS, Date.now(), `${TASK_PREFIX}${created.id}`);
+      await runTasks();
+
+      assert.equal(
+        (await GetSubscription(created.id)).currentPeriodStart,
+        START,
+        "a stopped module renews nothing",
+      );
+      assert.equal(chargesMade(created.id).length, 1);
+    });
   });
 });

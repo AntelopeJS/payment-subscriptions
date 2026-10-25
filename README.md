@@ -142,7 +142,7 @@ capability API and no assumed Stripe-style 24-hour window. See
 | Package                                 | Range            |
 | --------------------------------------- | ---------------- |
 | `@antelopejs/interface-redis`           | `>=0.0.6 <1.0.0` |
-| `@antelopejs/interface-redis-scheduler` | `>=0.0.7 <1.0.0` |
+| `@antelopejs/interface-redis-scheduler` | `>=0.0.9 <1.0.0` |
 
 These are the manifest's interface requirements. Provider modules can impose additional requirements; the example above uses Stripe 1.1 and MongoDB 1.4.
 

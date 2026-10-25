@@ -85,13 +85,19 @@ function RedisTrigger(
   scheduler: SchedulerModule,
 ): Trigger {
   const sweeper = new Sweeper(engine, settings.sweepIntervalMs);
+  let listening = false;
+  scheduler.setHandler(HANDLER_NAME, async (id) => {
+    if (listening) await engine.process(id);
+  });
   return {
     kind: "redis",
     start: () => {
+      listening = true;
       scheduler.enableListener().catch(report("listener"));
       sweeper.start();
     },
     stop: async () => {
+      listening = false;
       await sweeper.stop();
       await withTimeout(
         scheduler.disableListener().catch(report("shutdown")),
@@ -126,7 +132,7 @@ export async function ChooseTrigger(
   const scheduler: SchedulerModule =
     await import("@antelopejs/interface-redis-scheduler");
   try {
-    scheduler.setHandler(HANDLER_NAME, (id) => engine.process(id));
+    return RedisTrigger(engine, settings, scheduler);
   } catch (error) {
     Logging.Warn(
       "payment-subscriptions: the Redis scheduler refused the renewal handler; polling the database instead",
@@ -134,5 +140,4 @@ export async function ChooseTrigger(
     );
     return pollingTrigger(engine, settings);
   }
-  return RedisTrigger(engine, settings, scheduler);
 }

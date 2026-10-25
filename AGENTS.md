@@ -4,7 +4,7 @@ The AntelopeJS module `@antelopejs/payment-subscriptions`. It implements `@antel
 
 ## Layout
 
-- `src/`: the module. `implementation.ts` holds the interface implementation, `engine.ts` and `transitions.ts` the renewal state machine, `triggers.ts` the polling and Redis triggers, `schedule.ts` the provider schedule mirror, and `clock.ts` the replaceable time source the tests drive.
+- `src/`: the module. `implementation.ts` holds the interface implementation, `engine.ts` and `transitions.ts` the renewal state machine, `triggers.ts` the polling and Redis triggers, `schedule.ts` the provider schedule strategy chosen by the `providerSchedule` setting (the only one, `payment-interface`, charges off-session through `CreatePayment`), and `clock.ts` the replaceable time source the tests drive.
 - `src/test/`: the mocha suites, compiled to `dist/test` and run by `ajs module test`. `src/test/antelope.test.ts` (`antelopeJs.test` in `package.json`) is the test project.
 - `test/payment-provider/` (an in-memory payment provider) and `test/boot-probe/` (a consumer module) are plain-JS test modules loaded by path. They are never published; knip lists them as entries.
 
@@ -14,8 +14,8 @@ The interface packages are `dependencies` with ranges, and `@antelopejs/interfac
 
 ## Tests
 
-- `pnpm test` builds `dist` once, then runs the suite twice: `test:polling`, then `test:redis` (`ANTELOPE_SUBSCRIPTIONS_TEST_CLOCK=redis`). The test project starts an in-memory MongoDB 8.0.8 (`mongodb-memory-server-core`) and, for the Redis run, `redis-memory-server`; both download their binaries on first use, so the first run needs network access. Running `test:polling` or `test:redis` alone needs a built `dist`.
-- `pnpm run checks` does not run the documentation check on `README.md` and `docs/`. CI runs it through the `docs-files` inputs in `.github/workflows/ci.yml`.
+- `pnpm test` builds `dist` once, then runs the suite twice: `test:polling`, then `test:redis` (`ANTELOPE_SUBSCRIPTIONS_TEST_CLOCK=redis`). The test project starts an in-memory MongoDB 8.0.8 (`mongodb-memory-server-core`) and, for the Redis run, `redis-memory-server`; MongoDB downloads its binary on first use, and `redis-memory-server` downloads the Redis source and compiles `redis-server` on first use, so the first run needs network access, `make` and a C compiler. Running `test:polling` or `test:redis` alone needs a built `dist`.
+- `pnpm run checks` does not run the documentation check on `README.md` and `docs/`. CI runs it through the `docs-files` and `docs-typescript-project` inputs in `.github/workflows/ci.yml`, which also type-check the code examples against `docs/tsconfig.json`. To run it locally, clone `AntelopeJS/tooling-configs` at `v0.0.9` (the ref ci-node pins), run `npm ci --prefix actions/docs --omit=dev`, then run `node <clone>/actions/docs/check.mjs --files "$(printf 'README.md\ndocs')" --typescript-project docs/tsconfig.json` from this repository.
 
 ## Shipped files
 

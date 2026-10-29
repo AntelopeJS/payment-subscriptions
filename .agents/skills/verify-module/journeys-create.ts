@@ -7,8 +7,10 @@ import {
   SUCCEEDS,
   answer,
   call,
+  collection,
   create,
   failure,
+  mongosh,
   prepare,
   request,
   startStack,
@@ -70,6 +72,8 @@ export const createJourneys = {
         context.expect(two.folder, [equal("two records", two.count, "2")]);
         const list = await call(context, stack, "ListSubscriptions", "ListSubscriptions", [prepared.customer]);
         context.expect(list.folder, [equal("the customer lists both", (answer<Sub[]>(list).value ?? []).map((entry) => entry.id).sort(), [first.sub.id, other.sub.id].sort())]);
+        const indexes = await mongosh(context, "MongoDB indexes of the collection", `JSON.stringify(${collection()}.getIndexes().map((index) => Object.keys(index.key).join(",")))`);
+        context.expect(indexes.folder, [has("the customer lookup is indexed", indexes.stdout, /_instance,customer"/), has("the due-date poll is indexed", indexes.stdout, /_instance,dueAt"/)]);
         await context.stop("SIGINT", stack.app);
       },
     },

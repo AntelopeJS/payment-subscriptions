@@ -24,7 +24,7 @@ A consumer creates a subscription for a customer's saved payment method; the mod
 ## Sub-features
 
 - `create-and-read`: `CreateSubscription` answers an active, paid, one-month subscription; `GetSubscription` and `ListSubscriptions` answer the same one; MongoDB holds exactly one live record with the same customer, method, amount and charge; the project log says the polling clock was chosen.
-- `idempotent-create`: the same idempotency key answers the same subscription and leaves one record; another key makes a second one.
+- `idempotent-create`: the same idempotency key answers the same subscription and leaves one record; another key makes a second one; `getIndexes()` in mongosh shows the `customer` and `dueAt` indexes the schema declares. This is the containment journey of the Data door.
 - `empty-and-unknown`: a customer without subscriptions lists `[]`; `GetSubscription` of an unknown id is `SubscriptionNotFoundError`; nothing is stored.
 - `validation-errors`: seven invalid requests are each rejected with `InvalidSubscriptionRequestError` naming its rule, and nothing is stored.
 - `trial-and-anchor`: `trialEnd` gives a trialing subscription and `billingAnchor` an active one, both unpaid with the first period ending at that time; MongoDB shows the trial.

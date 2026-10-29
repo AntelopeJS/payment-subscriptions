@@ -1,22 +1,80 @@
+import { createHash } from "node:crypto";
+
 import { equal, exitIs, has, type Journey } from "@antelopejs/tooling-configs/verify";
 
 import {
+  AMOUNT,
   DECLINES,
   SANDBOX_KEYS,
   SUCCEEDS,
   answer,
   call,
+  collection,
   create,
   eventsOf,
   launch,
+  mongosh,
   prepare,
   prepareStack,
+  request,
   sleep,
   startStack,
   stored,
   waitFor,
+  type Prepared,
   type Sub,
 } from "./stack.ts";
+
+const LEGACY_KEY = "legacy-creating";
+
+/** The record an earlier process left in `creating` (release 0.0.3 wrote this shape, unchanged since): lease expired, charge not yet made. */
+const LEGACY_ID = `sub_${createHash("sha256").update(`\n${LEGACY_KEY}`).digest("hex").slice(0, 32)}`;
+
+function legacyCreating(prepared: Prepared): string {
+  const now = Date.now();
+  return JSON.stringify({
+    _id: LEGACY_ID,
+    revision: "00000000-0000-4000-8000-000000000000",
+    phase: "creating",
+    provider: "",
+    reference: "verify-legacy",
+    customer: prepared.customer,
+    paymentMethod: prepared.method,
+    amount: AMOUNT,
+    interval: "month",
+    intervalCount: 1,
+    description: null,
+    metadata: null,
+    status: "active",
+    anchor: now,
+    periodIndex: -1,
+    currentPeriodStart: now,
+    currentPeriodEnd: now,
+    trialEnd: null,
+    cancelAtPeriodEnd: false,
+    endedAt: null,
+    endReason: null,
+    latestPayment: null,
+    attempt: 0,
+    pendingPayment: null,
+    refusedPayment: null,
+    refusal: null,
+    attemptMethod: null,
+    attemptStartedAt: null,
+    attemptReplayUntil: null,
+    reconciliationRequired: false,
+    providerReference: null,
+    nextActionAt: now,
+    dueAt: null,
+    leaseOwner: "old-process",
+    leaseUntil: 1,
+    outbox: [],
+    operationKeys: [],
+    createdAt: now - 60_000,
+    createdOrder: (now - 60_000) * 1000,
+    _instance: null,
+  });
+}
 
 export const renewalJourneys = {
     "trial-renewal": {
@@ -63,22 +121,34 @@ export const renewalJourneys = {
       },
     },
     "survives-restart": {
-      title: "a subscription created before a restart is still there afterwards and is charged when its trial ends after the restart",
+      title: "records written before a restart are read back after it: a charged subscription, a trial that ends afterwards, and a creation an earlier release left unfinished",
       entryPoint: "Ctrl+C on `ajs project dev`, then `ajs project dev` again",
       async run(context) {
         const prepared = await prepareStack(context);
         const first = await launch(context, "first ajs project dev", prepared);
         const customer = await prepare(context, first, SUCCEEDS);
         const { sub } = await create(context, first, { name: "create with a 10 s trial", prepared: customer, key: "restart-create", overrides: { trialEnd: Date.now() + 10_000 } });
+        const charged = await create(context, first, { name: "create with an immediate charge", prepared: customer, key: "restart-charged", overrides: { reference: "verify-charged" } });
+        context.expect(charged.folder, [equal("the first charge is in the answer", charged.sub.latestPayment !== undefined, true)]);
         const stopped = await context.stop("SIGINT", first.app);
         context.expect(stopped.folder, [exitIs(stopped, 130)]);
         const down = await stored(context, "MongoDB record while the module is down", sub.id);
         context.expect(down.folder, [equal("the record waits in MongoDB", [down.record?.status, down.record?.latestPayment], ["trialing", null])], { critical: true });
+        const paid = await stored(context, "MongoDB charged record while the module is down", charged.sub.id);
+        context.expect(paid.folder, [equal("the charged record is live and keeps its payment", [paid.record?.phase, paid.record?.latestPayment === null], ["live", false])], { critical: true });
+        const seeded = await mongosh(context, "mongosh inserts a creation left unfinished", `${collection()}.insertOne(${legacyCreating(customer)}).acknowledged`);
+        context.expect(seeded.folder, [equal("mongosh stored the older record", seeded.stdout.trim(), "true")], { critical: true });
         const second = await launch(context, "second ajs project dev", prepared);
         const again = await prepare(context, second, SUCCEEDS);
         context.expect(second.app.folder, [equal("the in-memory test provider was refilled with the same ids", [again.customer, again.method], [customer.customer, customer.method])], { critical: true });
         const got = await call(context, second, "GetSubscription after restart", "GetSubscription", [sub.id]);
         context.expect(got.folder, [equal("the same subscription is read back", [answer<Sub>(got).value?.id, answer<Sub>(got).value?.customer], [sub.id, customer.customer])]);
+        const gotCharged = await call(context, second, "GetSubscription of the charged one", "GetSubscription", [charged.sub.id]);
+        context.expect(gotCharged.folder, [equal("the charged subscription is read back with its payment", [answer<Sub>(gotCharged).value?.id, answer<Sub>(gotCharged).value?.latestPayment], [charged.sub.id, charged.sub.latestPayment])]);
+        const resumed = await call(context, second, "replay the key of the unfinished creation", "CreateSubscription", [request(customer, { reference: "verify-legacy" }), LEGACY_KEY]);
+        context.expect(resumed.folder, [equal("the unfinished creation was completed", [answer<Sub>(resumed).ok, answer<Sub>(resumed).value?.id, answer<Sub>(resumed).value?.latestPayment !== undefined], [true, LEGACY_ID, true])]);
+        const finished = await stored(context, "MongoDB record of the completed creation", LEGACY_ID);
+        context.expect(finished.folder, [equal("it is live with its payment", [finished.record?.phase, finished.record?.latestPayment === null], ["live", false])]);
         const active = await waitFor(context, second, "wait for active after restart", sub.id, "active");
         context.expect(second.app.folder, [equal("the new process charged it", [active?.status, active?.latestPayment !== undefined], ["active", true])]);
         const seen = await eventsOf(context, second, "events after restart");

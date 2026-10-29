@@ -135,7 +135,7 @@ capability API and no assumed Stripe-style 24-hour window. See
 | `@antelopejs/interface-core`          | `>=0.0.5 <1.0.0` |
 | `@antelopejs/interface-database`      | `^0.1.8`         |
 | `@antelopejs/interface-payment`       | `>=0.0.2 <1.0.0` |
-| `@antelopejs/interface-subscriptions` | `>=0.0.2 <0.1.0` |
+| `@antelopejs/interface-subscriptions` | `>=0.1.0 <0.2.0` |
 
 <!-- docs-compat: ./package.json#optionalDependencies -->
 

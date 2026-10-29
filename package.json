@@ -53,13 +53,13 @@
   },
   "dependencies": {
     "@antelopejs/interface-core": ">=0.0.5 <1.0.0",
-    "@antelopejs/interface-database": "^0.1.8",
+    "@antelopejs/interface-database": ">=0.2.0 <1.0.0",
     "@antelopejs/interface-payment": ">=0.0.2 <1.0.0",
     "@antelopejs/interface-subscriptions": ">=0.0.2 <0.1.0"
   },
   "devDependencies": {
     "@antelopejs/core": "1.16.0",
-    "@antelopejs/mongodb": "^1.4.0",
+    "@antelopejs/mongodb": "^1.6.0",
     "@antelopejs/redis": "^1.0.3",
     "@antelopejs/tooling-configs": "^0.2.11",
     "@types/mocha": "^10.0.10",

@@ -56,7 +56,7 @@ export default defineConfig({
       source: {
         type: "package",
         package: "@antelopejs/mongodb",
-        version: "^1.4.2",
+        version: "^1.6.0",
       },
       config: { url: "REPLACE_VIA_ENV", database: "billing" },
     },
@@ -133,7 +133,7 @@ capability API and no assumed Stripe-style 24-hour window. See
 | Package                               | Range            |
 | ------------------------------------- | ---------------- |
 | `@antelopejs/interface-core`          | `>=0.0.5 <1.0.0` |
-| `@antelopejs/interface-database`      | `^0.1.8`         |
+| `@antelopejs/interface-database`      | `>=0.2.0 <1.0.0` |
 | `@antelopejs/interface-payment`       | `>=0.0.2 <1.0.0` |
 | `@antelopejs/interface-subscriptions` | `>=0.0.2 <0.1.0` |
 
@@ -144,7 +144,7 @@ capability API and no assumed Stripe-style 24-hour window. See
 | `@antelopejs/interface-redis`           | `>=0.0.6 <1.0.0` |
 | `@antelopejs/interface-redis-scheduler` | `>=0.0.9 <1.0.0` |
 
-These are the manifest's interface requirements. Provider modules can impose additional requirements; the example above uses Stripe 1.1 and MongoDB 1.4.
+These are the manifest's interface requirements. Provider modules can impose additional requirements; the example above uses Stripe 1.1 and MongoDB 1.6.
 
 ## Testing
 

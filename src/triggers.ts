@@ -43,14 +43,17 @@ class Sweeper {
 
   private tick(): void {
     if (this.running) return;
-    this.running = this.engine
-      .sweep()
-      .catch((error: unknown) =>
-        Logging.Error("payment-subscriptions: sweep failed", error),
-      )
-      .finally(() => {
-        this.running = undefined;
-      });
+    this.running = this.sweepLogged().finally(() => {
+      this.running = undefined;
+    });
+  }
+
+  private async sweepLogged(): Promise<void> {
+    try {
+      await this.engine.sweep();
+    } catch (error) {
+      Logging.Error("payment-subscriptions: sweep failed", error);
+    }
   }
 }
 
@@ -64,12 +67,15 @@ function pollingTrigger(engine: Engine, settings: Settings): Trigger {
   };
 }
 
-function report(action: string) {
-  return (error: unknown) =>
+async function reporting(action: string, work: Promise<void>): Promise<void> {
+  try {
+    await work;
+  } catch (error) {
     Logging.Warn(
       `payment-subscriptions: Redis scheduler ${action} failed`,
       error,
     );
+  }
 }
 
 function withTimeout(work: Promise<void>, ms: number): Promise<void> {
@@ -93,14 +99,14 @@ function RedisTrigger(
     kind: "redis",
     start: () => {
       listening = true;
-      scheduler.enableListener().catch(report("listener"));
+      void reporting("listener", scheduler.enableListener());
       sweeper.start();
     },
     stop: async () => {
       listening = false;
       await sweeper.stop();
       await withTimeout(
-        scheduler.disableListener().catch(report("shutdown")),
+        reporting("shutdown", scheduler.disableListener()),
         LISTENER_STOP_TIMEOUT_MS,
       );
     },
@@ -113,7 +119,7 @@ function RedisTrigger(
               Date.now() + RealDelayUntil(record.dueAt),
               record._id,
             );
-      task.catch(report("scheduling"));
+      void reporting("scheduling", task);
     },
   };
 }

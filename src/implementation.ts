@@ -65,14 +65,20 @@ async function loadLive(
   return record;
 }
 
-function wrapProviderFailure(error: unknown): never {
-  if (error instanceof PaymentError) {
-    throw new SubscriptionError(
-      `The payment provider failed: ${error.message}`,
-      error.providerCode,
-    );
+async function wrappingProviderFailure<Result>(
+  work: Promise<Result>,
+): Promise<Result> {
+  try {
+    return await work;
+  } catch (error) {
+    if (error instanceof PaymentError) {
+      throw new SubscriptionError(
+        `The payment provider failed: ${error.message}`,
+        error.providerCode,
+      );
+    }
+    throw error;
   }
-  throw error;
 }
 
 async function completeCreation(
@@ -81,9 +87,9 @@ async function completeCreation(
 ) {
   const { engine } = Runtime();
   const decided = Decide(record, Now());
-  const outcome = await engine
-    .perform(record, decided)
-    .catch(wrapProviderFailure);
+  const outcome = await wrappingProviderFailure(
+    engine.perform(record, decided),
+  );
   if (outcome.kind === "error") {
     const current = await LoadRecord(record._id);
     if (current)
@@ -209,9 +215,9 @@ async function CreateSubscription(
     settings,
   });
   record.providerReference =
-    (await schedule
-      .register(ToSubscription(record), provider)
-      .catch(wrapProviderFailure)) ?? null;
+    (await wrappingProviderFailure(
+      schedule.register(ToSubscription(record), provider),
+    )) ?? null;
   if (!(await InsertRecord(record))) return replayCreation(id, provider);
   engine.notify(record);
   if (record.phase === "live") {
@@ -330,8 +336,8 @@ async function UpdateSubscriptionPaymentMethod(
 ): Promise<Subscription> {
   return changeLive(id, idempotencyKey, provider, async (record) => {
     assertNotEnded(record);
-    const saved = await ListPaymentMethods(record.customer, provider).catch(
-      wrapProviderFailure,
+    const saved = await wrappingProviderFailure(
+      ListPaymentMethods(record.customer, provider),
     );
     if (!saved.some((method) => method.id === paymentMethod)) {
       throw new InvalidSubscriptionRequestError(

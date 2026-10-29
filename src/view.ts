@@ -1,15 +1,8 @@
 import type { Subscription } from "@antelopejs/interface-subscriptions";
 import type { SubscriptionRecord } from "./records";
 
-function present<K extends string, V>(
-  key: K,
-  value: V | null,
-): Partial<Record<K, V>> {
-  return value === null ? {} : ({ [key]: value } as Record<K, V>);
-}
-
 export function ToSubscription(record: SubscriptionRecord): Subscription {
-  return {
+  const subscription: Subscription = {
     vendorData: {
       reconciliationRequired: record.reconciliationRequired ?? false,
       attemptStartedAt: record.attemptStartedAt ?? null,
@@ -28,13 +21,12 @@ export function ToSubscription(record: SubscriptionRecord): Subscription {
     currentPeriodEnd: record.currentPeriodEnd,
     cancelAtPeriodEnd: record.cancelAtPeriodEnd,
     createdAt: record.createdAt,
-    ...present("trialEnd", record.trialEnd),
-    ...present("endedAt", record.endedAt),
-    ...present("endReason", record.endReason),
-    ...present("latestPayment", record.latestPayment),
-    ...present(
-      "metadata",
-      record.metadata === null ? null : { ...record.metadata },
-    ),
   };
+  if (record.trialEnd !== null) subscription.trialEnd = record.trialEnd;
+  if (record.endedAt !== null) subscription.endedAt = record.endedAt;
+  if (record.endReason !== null) subscription.endReason = record.endReason;
+  if (record.latestPayment !== null)
+    subscription.latestPayment = record.latestPayment;
+  if (record.metadata !== null) subscription.metadata = { ...record.metadata };
+  return subscription;
 }

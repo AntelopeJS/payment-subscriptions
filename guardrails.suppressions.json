@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "typescript/no-require-imports": 0
+  },
+  "tsExpectError": 0,
+  "tsIgnore": 0,
+  "safety": 0
+}

@@ -1,6 +1,6 @@
 {
   "rules": {
-    "typescript/no-require-imports": 1
+    "typescript/no-require-imports": 0
   },
   "tsExpectError": 0,
   "tsIgnore": 0,

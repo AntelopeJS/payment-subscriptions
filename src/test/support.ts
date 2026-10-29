@@ -57,7 +57,6 @@ interface ProviderControl {
   paymentStatus(id: string, provider?: string): string | undefined;
 }
 
-// oxlint-disable-next-line typescript/no-require-imports -- the provider is plain CommonJS outside src
 export const provider: ProviderControl =
   require("../../test/payment-provider").testControl;
 export const TOKENS = provider.TOKENS;

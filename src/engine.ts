@@ -209,8 +209,9 @@ export class Engine {
 
   /**
    * Runs the decided action against the provider and reports its outcome.
-   * A charge rechecks its replay window after pinning the attempt, because a
-   * process can stall even between the durable write and the provider call.
+   * A charge that resumes an attempt, or runs with replay protection, rechecks
+   * its replay window after pinning the attempt, because a process can stall
+   * even between the durable write and the provider call.
    */
   async perform(
     record: SubscriptionRecord,

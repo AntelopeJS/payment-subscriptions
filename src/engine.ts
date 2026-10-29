@@ -347,12 +347,14 @@ export class Engine {
   async releaseScheduleFor(id: string): Promise<void> {
     const record = await LoadRecord(id);
     if (!record) return;
-    await this.releaseSchedule(record).catch((error: unknown) =>
+    try {
+      await this.releaseSchedule(record);
+    } catch (error) {
       Logging.Warn(
         `payment-subscriptions: releasing ${id} with the provider failed`,
         error,
-      ),
-    );
+      );
+    }
   }
 
   private async releaseSchedule(record: SubscriptionRecord): Promise<void> {

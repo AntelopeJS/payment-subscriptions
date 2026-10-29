@@ -18,12 +18,14 @@ function corePackageRoot(): string {
   return path.dirname(manifest);
 }
 
-function moduleEntry(source: string, config: Record<string, unknown> = {}) {
+type ModuleSettings = Readonly<Record<string, number | string | undefined>>;
+
+function moduleEntry(source: string, config: ModuleSettings = {}) {
   return { source: { type: "local", path: path.join(ROOT, source) }, config };
 }
 
 function projectModules() {
-  const modules: Record<string, unknown> = {
+  const modules = {
     subscriptions: moduleEntry(".", { pollIntervalMs: 100 }),
     payments: moduleEntry("test/payment-provider"),
     mongodb: moduleEntry("node_modules/@antelopejs/mongodb", {
@@ -32,12 +34,13 @@ function projectModules() {
     }),
     probe: moduleEntry("test/boot-probe"),
   };
-  if (CLOCK_UNDER_TEST === "redis") {
-    modules.redis = moduleEntry("node_modules/@antelopejs/redis", {
+  if (CLOCK_UNDER_TEST !== "redis") return modules;
+  return {
+    ...modules,
+    redis: moduleEntry("node_modules/@antelopejs/redis", {
       url: process.env.ANTELOPE_SUBSCRIPTIONS_TEST_REDIS_URL,
-    });
-  }
-  return modules;
+    }),
+  };
 }
 
 function writeProject(folder: string): void {

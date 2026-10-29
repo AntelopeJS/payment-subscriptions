@@ -56,14 +56,16 @@ export interface Config {
   providerSchedule?: string;
 }
 
-export type Settings = Required<Config>;
+export type Settings = Required<Omit<Config, "retryDelaysMs">> & {
+  retryDelaysMs: readonly number[];
+};
 
 const DEFAULT_SETTINGS: Settings = Object.freeze({
   guaranteedReplayMs: 0,
   pollIntervalMs: MINUTE_MS,
   sweepIntervalMs: 15 * MINUTE_MS,
   leaseMs: 5 * MINUTE_MS,
-  retryDelaysMs: Object.freeze([DAY_MS, 3 * DAY_MS, 7 * DAY_MS]) as number[],
+  retryDelaysMs: Object.freeze([DAY_MS, 3 * DAY_MS, 7 * DAY_MS]),
   settlementPollMs: HOUR_MS,
   errorBackoffMs: 5 * MINUTE_MS,
   batchSize: 100,

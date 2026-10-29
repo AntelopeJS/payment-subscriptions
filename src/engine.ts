@@ -50,8 +50,13 @@ function replayExpired(record: SubscriptionRecord): boolean {
   );
 }
 
+/**
+ * Whether the next charge starts a new attempt: no method is pinned and no
+ * attempt has started. A live record without `attemptStartedAt` also counts,
+ * because the old live engine pinned the method before every charge, but
+ * creation did not.
+ */
 function isFreshAttempt(record: SubscriptionRecord): boolean {
-  // The old live engine pinned the method before every charge, but creation did not.
   return (
     record.attemptMethod === null &&
     (record.attemptStartedAt === null ||
@@ -202,6 +207,12 @@ export class Engine {
     });
   }
 
+  /**
+   * Runs the decided action against the provider and reports its outcome.
+   * A charge that resumes an attempt, or runs with replay protection, rechecks
+   * its replay window after pinning the attempt, because a process can stall
+   * even between the durable write and the provider call.
+   */
   async perform(
     record: SubscriptionRecord,
     decided: Decision,
@@ -219,7 +230,6 @@ export class Engine {
       if (!pinned)
         throw new Error(`Subscription ${record._id} changed before charging`);
       record = pinned;
-      // A process can stall even between the durable write and the provider call.
       if (
         (!fresh || this.settings.guaranteedReplayMs > 0) &&
         Now() >= record.attemptReplayUntil!
@@ -266,13 +276,17 @@ export class Engine {
     });
   }
 
+  /**
+   * Applies the outcome to the stored record and persists it. The record is
+   * reloaded first, because dispatch can persist an attempt before the outcome
+   * is ready to commit.
+   */
   async commit(
     record: SubscriptionRecord,
     decided: Decision,
     outcome: Outcome,
     extra: Partial<Transition> = {},
   ): Promise<SubscriptionRecord> {
-    // Dispatch can persist an attempt before the outcome is ready to commit.
     let current = await LoadRecord(record._id);
     for (let attempt = 0; attempt < WRITE_ATTEMPTS && current; attempt += 1) {
       const now = Now();
@@ -334,12 +348,14 @@ export class Engine {
   async releaseScheduleFor(id: string): Promise<void> {
     const record = await LoadRecord(id);
     if (!record) return;
-    await this.releaseSchedule(record).catch((error: unknown) =>
+    try {
+      await this.releaseSchedule(record);
+    } catch (error) {
       Logging.Warn(
         `payment-subscriptions: releasing ${id} with the provider failed`,
         error,
-      ),
-    );
+      );
+    }
   }
 
   private async releaseSchedule(record: SubscriptionRecord): Promise<void> {

@@ -1,0 +1,13 @@
+diff --git a/src/implementation.ts b/src/implementation.ts
+index 1be515b..6443c16 100644
+--- a/src/implementation.ts
++++ b/src/implementation.ts
+@@ -300,7 +300,7 @@ const CANCELLATIONS: Record<CancellationTiming, Change> = {
+     const ended = { ...record, ...patch };
+     return { patch, events: [RaiseEvent(ended, "subscription.canceled", now)] };
+   },
+-  period_end: () => ({ patch: { cancelAtPeriodEnd: true }, events: [] }),
++  period_end: () => ({ patch: { cancelAtPeriodEnd: false }, events: [] }),
+ };
+ 
+ async function CancelSubscription(

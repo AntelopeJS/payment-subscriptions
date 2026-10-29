@@ -1,0 +1,13 @@
+diff --git a/package.json b/package.json
+index b01891f..bcef31e 100644
+--- a/package.json
++++ b/package.json
+@@ -86,7 +86,7 @@
+     "implements": [
+       "@antelopejs/interface-subscriptions"
+     ],
+-    "defaultConfig": {},
++    "defaultConfig": { "pollIntervalMs": 1000 },
+     "test": "src/test/antelope.test.ts",
+     "skills": [
+       "./skills"

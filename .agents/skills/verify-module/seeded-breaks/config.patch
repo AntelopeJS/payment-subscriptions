@@ -1,0 +1,11 @@
+diff --git a/src/config.ts b/src/config.ts
+index 4b9033d..27cc3f8 100644
+--- a/src/config.ts
++++ b/src/config.ts
+@@ -85,5 +85,5 @@ export function ResolveSettings(config: Config = {}): Settings {
+   const defined = Object.entries(config).filter(
+     ([, value]) => value !== undefined,
+   );
+-  return { ...DEFAULT_SETTINGS, ...Object.fromEntries(defined) };
++  return { ...Object.fromEntries(defined), ...DEFAULT_SETTINGS };
+ }

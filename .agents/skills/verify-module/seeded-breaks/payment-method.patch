@@ -1,0 +1,13 @@
+diff --git a/src/implementation.ts b/src/implementation.ts
+index 1be515b..7dce4e2 100644
+--- a/src/implementation.ts
++++ b/src/implementation.ts
+@@ -344,7 +344,7 @@ async function UpdateSubscriptionPaymentMethod(
+         `Payment method ${paymentMethod} is not saved against customer ${record.customer}`,
+       );
+     }
+-    return { patch: { paymentMethod }, events: [] };
++    return { patch: {}, events: [] };
+   });
+ }
+ 

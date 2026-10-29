@@ -1,0 +1,13 @@
+diff --git a/src/records.ts b/src/records.ts
+index f474768..892ed28 100644
+--- a/src/records.ts
++++ b/src/records.ts
+@@ -75,7 +75,7 @@ const NOT_DUE = null;
+ const schema = new Schema<Tables>(SCHEMA_ID, {
+   subscriptions: {
+     fields: {},
+-    indexes: { dueAt: {}, customer: {} },
++    indexes: { dueAt: {} },
+   },
+ });
+ 

@@ -1,0 +1,13 @@
+diff --git a/src/view.ts b/src/view.ts
+index 479af01..e609177 100644
+--- a/src/view.ts
++++ b/src/view.ts
+@@ -9,7 +9,7 @@ export function ToSubscription(record: SubscriptionRecord): Subscription {
+       attemptReplayUntil: record.attemptReplayUntil ?? null,
+       phase: record.phase,
+     },
+-    id: record._id,
++    id: record.reference,
+     reference: record.reference,
+     customer: record.customer,
+     paymentMethod: record.paymentMethod,

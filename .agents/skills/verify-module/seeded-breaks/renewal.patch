@@ -1,0 +1,13 @@
+diff --git a/src/triggers.ts b/src/triggers.ts
+index b731528..bc9ef22 100644
+--- a/src/triggers.ts
++++ b/src/triggers.ts
+@@ -31,7 +31,7 @@ class Sweeper {
+ 
+   start(): void {
+     this.tick();
+-    this.timer = setInterval(() => this.tick(), this.intervalMs);
++    this.timer = setInterval(() => this.tick(), this.intervalMs * 1000);
+     this.timer.unref();
+   }
+ 

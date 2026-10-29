@@ -1,0 +1,13 @@
+diff --git a/src/events.ts b/src/events.ts
+index bfd93f3..be8e539 100644
+--- a/src/events.ts
++++ b/src/events.ts
+@@ -46,7 +46,7 @@ async function deliverOne(event: StoredEvent): Promise<boolean> {
+     createdAt: event.createdAt,
+     subscription: event.subscription,
+   };
+-  if (event.payment !== null) delivered.payment = event.payment;
++
+   const outcomes = await Promise.allSettled(
+     [...handlers.values()].map(async (handler) => handler(delivered)),
+   );

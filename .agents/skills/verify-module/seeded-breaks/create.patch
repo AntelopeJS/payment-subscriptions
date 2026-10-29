@@ -1,0 +1,13 @@
+diff --git a/src/calendar.ts b/src/calendar.ts
+index 4394b1e..c5a609e 100644
+--- a/src/calendar.ts
++++ b/src/calendar.ts
+@@ -29,7 +29,7 @@ function addMonths(months: number): Step {
+ 
+ const STEPS: Record<SubscriptionInterval, Step> = {
+   day: addDays(1),
+-  week: addDays(7),
++  week: addDays(6),
+   month: addMonths(1),
+   year: addMonths(MONTHS_PER_YEAR),
+ };

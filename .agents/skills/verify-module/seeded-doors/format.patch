@@ -1,0 +1,13 @@
+diff --git a/src/initial.ts b/src/initial.ts
+index 2d67629..da9db4a 100644
+--- a/src/initial.ts
++++ b/src/initial.ts
+@@ -105,7 +105,7 @@ export function InitialRecord(
+     return deferred(record, request.billingAnchor, false);
+   return {
+     ...record,
+-    phase: "creating",
++    phase: "live",
+     leaseOwner: instanceId,
+     leaseUntil: now + settings.leaseMs,
+   };

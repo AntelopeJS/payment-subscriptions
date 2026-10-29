@@ -26,8 +26,6 @@ const EXIT_GRACE_MS = 2_000;
 
 function exitOnceSchedulerTimerIsAllThatIsLeft(): void {
   if (CLOCK !== "redis") return;
-  // Scheduler 0.0.7 quits its subscriber but leaves its long-lived timer referenced.
-  // Core 1.16.0 still hangs after successful cleanup. Preserve the runner's failure code.
   setTimeout(() => process.exit(process.exitCode), EXIT_GRACE_MS).unref();
 }
 

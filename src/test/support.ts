@@ -20,8 +20,10 @@ import { Runtime } from "../runtime";
 import { start, stop } from "../index";
 import { type Clock, SYSTEM_CLOCK, UseClock } from "../clock";
 
-// Quiesce renewals before the runner tears down the database provider.
-after(() => stop());
+after(
+  "quiesce renewals before the runner tears down the database provider",
+  () => stop(),
+);
 
 const SECOND_MS = 1000;
 export const MINUTE_MS = 60 * SECOND_MS;
@@ -55,7 +57,6 @@ interface ProviderControl {
   paymentStatus(id: string, provider?: string): string | undefined;
 }
 
-// oxlint-disable-next-line typescript/no-require-imports -- the provider is plain CommonJS outside src
 export const provider: ProviderControl =
   require("../../test/payment-provider").testControl;
 export const TOKENS = provider.TOKENS;

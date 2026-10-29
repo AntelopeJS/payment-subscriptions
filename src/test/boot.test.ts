@@ -2,14 +2,7 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import assert from "node:assert/strict";
 import { type ChildProcess, spawn } from "node:child_process";
-import {
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  realpathSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 
 import { CLOCK_UNDER_TEST } from "./support";
 
@@ -19,26 +12,20 @@ const MILESTONES = ["LAUNCHED", "RENEWED"];
 const CORE_PACKAGE = "@antelopejs/core";
 
 function corePackageRoot(): string {
-  let folder = path.dirname(realpathSync(process.argv[1]));
-  while (folder !== path.dirname(folder)) {
-    const manifest = path.join(folder, "package.json");
-    if (
-      existsSync(manifest) &&
-      JSON.parse(readFileSync(manifest, "utf8")).name === CORE_PACKAGE
-    ) {
-      return folder;
-    }
-    folder = path.dirname(folder);
-  }
-  throw new Error(`Cannot find ${CORE_PACKAGE} above ${process.argv[1]}`);
+  const manifest = require.resolve(`${CORE_PACKAGE}/package.json`, {
+    paths: [path.dirname(realpathSync(process.argv[1]))],
+  });
+  return path.dirname(manifest);
 }
 
-function moduleEntry(source: string, config: Record<string, unknown> = {}) {
+type ModuleSettings = Readonly<Record<string, number | string | undefined>>;
+
+function moduleEntry(source: string, config: ModuleSettings = {}) {
   return { source: { type: "local", path: path.join(ROOT, source) }, config };
 }
 
 function projectModules() {
-  const modules: Record<string, unknown> = {
+  const modules = {
     subscriptions: moduleEntry(".", { pollIntervalMs: 100 }),
     payments: moduleEntry("test/payment-provider"),
     mongodb: moduleEntry("node_modules/@antelopejs/mongodb", {
@@ -47,12 +34,13 @@ function projectModules() {
     }),
     probe: moduleEntry("test/boot-probe"),
   };
-  if (CLOCK_UNDER_TEST === "redis") {
-    modules.redis = moduleEntry("node_modules/@antelopejs/redis", {
+  if (CLOCK_UNDER_TEST !== "redis") return modules;
+  return {
+    ...modules,
+    redis: moduleEntry("node_modules/@antelopejs/redis", {
       url: process.env.ANTELOPE_SUBSCRIPTIONS_TEST_REDIS_URL,
-    });
-  }
-  return modules;
+    }),
+  };
 }
 
 function writeProject(folder: string): void {

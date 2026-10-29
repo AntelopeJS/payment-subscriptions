@@ -20,7 +20,6 @@ import { Runtime } from "../runtime";
 import { start, stop } from "../index";
 import { type Clock, SYSTEM_CLOCK, UseClock } from "../clock";
 
-// Quiesce renewals before the runner tears down the database provider.
 after(
   "quiesce renewals before the runner tears down the database provider",
   () => stop(),

@@ -10,7 +10,7 @@ The AntelopeJS module `@antelopejs/payment-subscriptions`. It implements `@antel
 
 ## Versioning
 
-The interface packages are `dependencies` with ranges, and `@antelopejs/interface-redis` and `@antelopejs/interface-redis-scheduler` are `optionalDependencies`, so the module starts without Redis. The README compatibility table mirrors both blocks (`docs-compat` markers); change it with the ranges. `@antelopejs/core` is pinned to `1.16.0`: the suite verifies Redis routing under that version, and `src/test/antelope.test.ts` works around its exit hang after the Redis run. Recheck both when you bump it.
+The interface packages are `dependencies` with ranges, and `@antelopejs/interface-redis` and `@antelopejs/interface-redis-scheduler` are `optionalDependencies`, so the module starts without Redis. The README compatibility table mirrors both blocks (`docs-compat` markers); change it with the ranges. `@antelopejs/core` is pinned to `1.16.0`: the suite verifies Redis routing under that version, and `src/test/antelope.test.ts` works around its exit hang after the Redis run: the Redis scheduler 0.0.7 quits its subscriber but leaves its long-lived timer referenced, and core 1.16.0 still hangs after a successful cleanup, so the test project exits after a grace period with the runner's exit code. Recheck both when you bump it.
 
 ## Tests
 

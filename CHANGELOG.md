@@ -1,5 +1,32 @@
 # Changelog
 
+## v0.0.3
+
+[compare changes](https://github.com/AntelopeJS/payment-subscriptions/compare/v0.0.2...v0.0.3)
+
+### 🩹 Fixes
+
+- **triggers:** Ignore Redis tasks while the trigger is stopped ([#7](https://github.com/AntelopeJS/payment-subscriptions/pull/7))
+
+### 💅 Refactors
+
+- Clean the repo with the guardrail pack ([#13](https://github.com/AntelopeJS/payment-subscriptions/pull/13))
+
+### 📦 Build
+
+- **deps:** Adopt @antelopejs/interface-database 0.2.0 ([#9](https://github.com/AntelopeJS/payment-subscriptions/pull/9))
+- **deps:** Adopt @antelopejs/interface-subscriptions 0.1.0 ([#10](https://github.com/AntelopeJS/payment-subscriptions/pull/10))
+
+### 🏡 Chore
+
+- Align public documentation and repository standards ([#4](https://github.com/AntelopeJS/payment-subscriptions/pull/4))
+- Adopt the guardrail pack from tooling-configs 0.2.0 ([#5](https://github.com/AntelopeJS/payment-subscriptions/pull/5))
+- Configure Renovate with the shared preset ([#6](https://github.com/AntelopeJS/payment-subscriptions/pull/6))
+
+### ❤️ Contributors
+
+- Antony Rizzitelli ([@Upd4ting](http://github.com/Upd4ting))
+
 ## v0.0.2
 
 

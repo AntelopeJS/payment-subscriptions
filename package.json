@@ -1,6 +1,6 @@
 {
   "name": "@antelopejs/payment-subscriptions",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Generic AntelopeJS subscriptions on top of any payment interface provider: saved methods charged off-session, on a renewal clock the module owns",
   "keywords": [
     "antelopejs",

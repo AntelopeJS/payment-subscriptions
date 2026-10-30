@@ -128,21 +128,18 @@ capability API and no assumed Stripe-style 24-hour window. See
 
 ## Compatibility
 
-<!-- docs-compat: ./package.json#dependencies -->
+<!-- antelopejs-docs-compat:start -->
 
-| Package                               | Range            |
-| ------------------------------------- | ---------------- |
-| `@antelopejs/interface-core`          | `>=0.0.5 <1.0.0` |
-| `@antelopejs/interface-database`      | `>=0.2.0 <1.0.0` |
-| `@antelopejs/interface-payment`       | `>=0.0.2 <1.0.0` |
-| `@antelopejs/interface-subscriptions` | `>=0.1.0 <0.2.0` |
+| Package                                 | Supported        | Tested with |
+| --------------------------------------- | ---------------- | ----------- |
+| `@antelopejs/interface-core`            | `>=0.0.5 <1.0.0` | `0.3.0`     |
+| `@antelopejs/interface-database`        | `>=0.2.0 <1.0.0` | `0.2.0`     |
+| `@antelopejs/interface-payment`         | `>=0.0.2 <1.0.0` | `0.0.2`     |
+| `@antelopejs/interface-redis`           | `>=0.0.6 <1.0.0` | `0.0.8`     |
+| `@antelopejs/interface-redis-scheduler` | `>=0.0.9 <1.0.0` | `0.0.9`     |
+| `@antelopejs/interface-subscriptions`   | `>=0.1.0 <0.2.0` | `0.1.0`     |
 
-<!-- docs-compat: ./package.json#optionalDependencies -->
-
-| Package                                 | Range            |
-| --------------------------------------- | ---------------- |
-| `@antelopejs/interface-redis`           | `>=0.0.6 <1.0.0` |
-| `@antelopejs/interface-redis-scheduler` | `>=0.0.9 <1.0.0` |
+<!-- antelopejs-docs-compat:end -->
 
 These are the manifest's interface requirements. Provider modules can impose additional requirements; the example above uses Stripe 1.1 and MongoDB 1.6.
 

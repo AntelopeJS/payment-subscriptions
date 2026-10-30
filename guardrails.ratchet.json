@@ -1,0 +1,11 @@
+{
+  "pack": "0.2.17",
+  "rules": {
+    "antelopejs/no-inherited-key-lookup": 1,
+    "typescript/no-unsafe-argument": 10,
+    "typescript/no-unsafe-assignment": 41,
+    "typescript/no-unsafe-return": 14,
+    "typescript/use-unknown-in-catch-callback-variable": 1
+  },
+  "oversizeFiles": {}
+}

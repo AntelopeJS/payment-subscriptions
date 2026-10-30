@@ -6,7 +6,7 @@ The AntelopeJS module `@antelopejs/payment-subscriptions`. It implements `@antel
 
 - `src/`: the module. `implementation.ts` holds the interface implementation, `engine.ts` and `transitions.ts` the renewal state machine, `triggers.ts` the polling and Redis triggers, `schedule.ts` the provider schedule strategy chosen by the `providerSchedule` setting (the only one, `payment-interface`, charges off-session through `CreatePayment`), and `clock.ts` the replaceable time source the tests drive.
 - `src/test/`: the mocha suites, compiled to `dist/test` and run by `ajs module test`. `src/test/antelope.test.ts` (`antelopeJs.test` in `package.json`) is the test project.
-- `test/payment-provider/` (an in-memory payment provider) and `test/boot-probe/` (a consumer module) are plain-JS test modules loaded by path. They are never published; knip lists them as entries.
+- `test/payment-provider/` (an in-memory payment provider) and `test/boot-probe/` (a consumer module) are plain-JS test modules loaded by path. They are never published; knip lists them as entries. Their types are JSDoc. `test/payment-provider/index.d.ts` is the typed face of the provider that `src/test/support.ts` imports (`src/` cannot import the `.js` itself: it sits outside `rootDir`), and `test/tsconfig.json` lists the two modules so the type-aware lint reads them with the Node types.
 
 ## Versioning
 

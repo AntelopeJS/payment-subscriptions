@@ -49,9 +49,7 @@
     "sync": "antelopejs-sync",
     "sync:check": "antelopejs-sync --check",
     "suppressions": "antelopejs-suppressions",
-    "suppressions:update": "antelopejs-suppressions --update",
-    "ratchet": "antelopejs-ratchet",
-    "ratchet:update": "antelopejs-ratchet --update"
+    "suppressions:update": "antelopejs-suppressions --update"
   },
   "dependencies": {
     "@antelopejs/interface-core": ">=0.0.5 <1.0.0",

@@ -6,7 +6,7 @@ The AntelopeJS module `@antelopejs/payment-subscriptions`. It implements `@antel
 
 - `src/`: the module. `implementation.ts` holds the interface implementation, `engine.ts` and `transitions.ts` the renewal state machine, `triggers.ts` the polling and Redis triggers, `schedule.ts` the provider schedule strategy chosen by the `providerSchedule` setting (the only one, `payment-interface`, charges off-session through `CreatePayment`), and `clock.ts` the replaceable time source the tests drive.
 - `src/test/`: the mocha suites, compiled to `dist/test` and run by `ajs module test`. `src/test/antelope.test.ts` (`antelopeJs.test` in `package.json`) is the test project.
-- `test/payment-provider/` (an in-memory payment provider) and `test/boot-probe/` (a consumer module) are plain-JS test modules loaded by path. They are never published; knip lists them as entries.
+- `test/payment-provider/` (an in-memory payment provider) and `test/boot-probe/` (a consumer module) are plain-JS test modules loaded by path. They are never published; knip lists them as entries. Their types are JSDoc. `test/payment-provider/index.d.ts` is the typed face of the provider that `src/test/support.ts` imports (`src/` cannot import the `.js` itself: it sits outside `rootDir`), and `test/tsconfig.json` lists the two modules so the type-aware lint reads them with the Node types.
 
 ## Versioning
 
@@ -26,7 +26,7 @@ The interface packages are `dependencies` with ranges, and `@antelopejs/interfac
 
 ## Guardrails
 
-Finish every change with `pnpm run checks`. It runs typecheck, lint, format, knip, tests, size, ratchet, suppressions, and sync, and prints only what failed. The change is done when it prints no failure.
+Finish every change with `pnpm run checks`. It runs typecheck, lint, format, knip, tests, size, suppressions, and sync, and prints only what failed. The change is done when it prints no failure.
 
 Prove a change works with the verification skill in [`.agents/skills/verify-module/SKILL.md`](.agents/skills/verify-module/SKILL.md) before you call it done.
 
@@ -65,10 +65,6 @@ Verify a boundary against the imports a developer or agent would plausibly write
 ### Suppression budget
 
 `guardrails.suppressions.json` caps the suppressions in authored code: lint directives per rule they name (`*` for none), `@ts-expect-error`, `@ts-ignore` and `SAFETY:` comments, and under `config` each rule a lint config (`oxlint.config.*`, `.oxlintrc.json`, `eslint.config.*`) switches off or to a warning, keyed by rule and `files` glob anchored at the config's directory, so widening or moving a scope is a new ceiling of 0, while narrowing one takes over the room it gives up. Switching a rule off in a config is a suppression too: fix the code its rule reports instead. A suppression over its ceiling fails: fix the code, or remove another suppression of the same kind. A rule that keeps needing suppressions should be changed in the preset. Never raise or remove a number in that file: the check fails a ceiling higher than on the pull request base, and only the operator approves a raise. A directive disabling `anti-slop/require-safety-comment-for-type-assertion` is burn-down debt: remove the assertion, or, where it holds, replace the directive with `SAFETY: <why it holds>`, which takes over its room without a raise. After you remove suppressions, run `pnpm run suppressions:update` and commit the lowered file.
-
-### Debt
-
-`guardrails.ratchet.json` records the lint findings and oversize files this repository already had. Its numbers only go down. After you remove debt, or after a pack upgrade, run `pnpm run ratchet:update` and commit the file: it lowers the numbers and adds only the rules the new pack release enabled, at today's count. Never edit the numbers by hand; CI fails one added or raised against the base. A rule listed there is off for `oxlint`. The ratchet counts it instead, and the pre-commit hook rejects it on every line you add.
 
 ### What enforces what
 
@@ -111,6 +107,5 @@ Verify a boundary against the imports a developer or agent would plausibly write
 | Entry-only rules exempt no tracked outsider                                    | `antelopejs-sync --check`                           |
 | A DMS layer's `build/backend-boundary.ts` is the pack's plugin                 | `antelopejs-sync --check`                           |
 | A test names the wrong implementation it catches                               | review; no tool                                     |
-| Existing debt only shrinks                                                     | `antelopejs-ratchet`                                |
 
 <!-- antelopejs-guardrails:end -->

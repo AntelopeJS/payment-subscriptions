@@ -61,7 +61,7 @@
     "@antelopejs/core": "1.16.0",
     "@antelopejs/mongodb": "^1.6.0",
     "@antelopejs/redis": "^1.0.3",
-    "@antelopejs/tooling-configs": "^0.2.17",
+    "@antelopejs/tooling-configs": "file:.campaign/tgz/antelopejs-tooling-configs-c5ffa8e.tgz",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.19.15",
     "eslint-plugin-perfectionist": "^5.11.0",
@@ -82,6 +82,11 @@
     "@antelopejs/interface-redis-scheduler": ">=0.0.9 <1.0.0"
   },
   "packageManager": "pnpm@10.6.5",
+  "pnpm": {
+    "overrides": {
+      "@antelopejs/tooling-configs": "file:.campaign/tgz/antelopejs-tooling-configs-c5ffa8e.tgz"
+    }
+  },
   "antelopeJs": {
     "implements": [
       "@antelopejs/interface-subscriptions"

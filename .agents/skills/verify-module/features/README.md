@@ -10,5 +10,5 @@ One file per feature. `covers:` lists the source globs it owns, `docs:` the page
 | [renewal](renewal.md) | Lets the module charge renewals on its own clock, retry declines and survive restarts. | trial-renewal, failed-renewal-ends, survives-restart, redis-clock |
 | [events](events.md) | Receives subscription events. | event-delivery |
 | [config](config.md) | Tunes the module with its configuration. | retry-policy |
-| [sandbox](sandbox.md) | The first charge against a real Stripe sandbox. NOT VERIFIED without sandbox keys. | provider-sandbox |
+| [sandbox](sandbox.md) | The first charge against a real Stripe sandbox. NOT VERIFIED without sandbox keys. | period-length, provider-sandbox |
 | [smoke](smoke.md) | The fixed journey every verdict runs. | create-and-read |

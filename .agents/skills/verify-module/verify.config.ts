@@ -1,5 +1,6 @@
 import type { VerifyConfig } from "@antelopejs/tooling-configs/verify";
 
+import { chargeJourneys } from "./journeys-charge.ts";
 import { changeJourneys } from "./journeys-change.ts";
 import { createJourneys } from "./journeys-create.ts";
 import { renewalJourneys } from "./journeys-renewal.ts";
@@ -52,7 +53,7 @@ const config: VerifyConfig = {
   moduleConfig() {
     return { pollIntervalMs: 100 };
   },
-  journeys: { ...createJourneys, ...changeJourneys, ...renewalJourneys },
+  journeys: { ...createJourneys, ...changeJourneys, ...chargeJourneys, ...renewalJourneys },
 };
 
 export default config;

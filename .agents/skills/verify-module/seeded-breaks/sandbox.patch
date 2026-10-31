@@ -1,0 +1,12 @@
+diff --git a/src/schedule.ts b/src/schedule.ts
+--- a/src/schedule.ts
++++ b/src/schedule.ts
+@@ -34,7 +34,7 @@ function chargeOffSession(charge: ScheduledCharge): Promise<Payment> {
+       offSession: true,
+       metadata: {
+         ...subscription.metadata,
+-        [SUBSCRIPTION_METADATA_KEY]: subscription.id,
++        [SUBSCRIPTION_METADATA_KEY]: subscription.reference,
+       },
+     },
+     charge.idempotencyKey,

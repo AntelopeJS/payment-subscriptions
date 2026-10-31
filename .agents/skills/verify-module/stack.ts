@@ -251,6 +251,7 @@ export interface Overrides {
   trialEnd?: number;
   billingAnchor?: number;
   amount?: { value: number; currency: string };
+  metadata?: Record<string, string>;
 }
 
 export function request(prepared: Prepared, overrides: Overrides = {}) {

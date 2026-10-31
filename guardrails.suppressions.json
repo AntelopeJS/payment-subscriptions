@@ -4,6 +4,7 @@
   },
   "tsExpectError": 0,
   "tsIgnore": 0,
-  "safety": 0,
-  "config": {}
+  "safety": 4,
+  "config": {},
+  "agentFiles": true
 }

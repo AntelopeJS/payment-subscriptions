@@ -1,13 +1,12 @@
-diff --git a/src/calendar.ts b/src/calendar.ts
-index 4394b1e..2bcbe43 100644
---- a/src/calendar.ts
-+++ b/src/calendar.ts
-@@ -28,7 +28,7 @@ function addMonths(months: number): Step {
- }
- 
- const STEPS: Record<SubscriptionInterval, Step> = {
--  day: addDays(1),
-+  day: addDays(2),
-   week: addDays(7),
-   month: addMonths(1),
-   year: addMonths(MONTHS_PER_YEAR),
+diff --git a/src/schedule.ts b/src/schedule.ts
+--- a/src/schedule.ts
++++ b/src/schedule.ts
+@@ -34,7 +34,7 @@ function chargeOffSession(charge: ScheduledCharge): Promise<Payment> {
+       offSession: true,
+       metadata: {
+         ...subscription.metadata,
+-        [SUBSCRIPTION_METADATA_KEY]: subscription.id,
++        [SUBSCRIPTION_METADATA_KEY]: subscription.reference,
+       },
+     },
+     charge.idempotencyKey,

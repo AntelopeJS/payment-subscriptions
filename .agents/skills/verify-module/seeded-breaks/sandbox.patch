@@ -1,0 +1,13 @@
+diff --git a/src/initial.ts b/src/initial.ts
+index 2d67629..768dff5 100644
+--- a/src/initial.ts
++++ b/src/initial.ts
+@@ -32,7 +32,7 @@ function base(
+     paymentMethod: request.paymentMethod,
+     amount: { value: request.amount.value, currency: request.amount.currency },
+     interval: request.interval,
+-    intervalCount: request.intervalCount ?? 1,
++    intervalCount: request.intervalCount ?? 2,
+     description: request.description ?? null,
+     metadata: request.metadata ? { ...request.metadata } : null,
+     status: "active",

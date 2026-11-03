@@ -1,17 +1,18 @@
-# @antelopejs/payment-subscriptions
+# `@antelopejs/payment-subscriptions`
 
 <div align="center">
-<a href="https://www.npmjs.com/package/@antelopejs/payment-subscriptions"><img alt="npm" src="https://img.shields.io/npm/v/@antelopejs/payment-subscriptions?style=for-the-badge&labelColor=000000&color=000000"></a>
-<a href="./LICENSE"><img alt="License" src="https://img.shields.io/npm/l/@antelopejs/payment-subscriptions?style=for-the-badge&labelColor=000000&color=000000"></a>
-<a href="https://discord.gg/g4pFt6eXqu"><img alt="Discord" src="https://img.shields.io/badge/Discord-18181B?logo=discord&style=for-the-badge&color=000000"></a>
-<a href="./docs/1.introduction.md"><img alt="Docs" src="https://img.shields.io/badge/Docs-18181B?style=for-the-badge&color=000000"></a>
+<a href="https://www.npmjs.com/package/@antelopejs/payment-subscriptions"><img data-illustration alt="npm" src="https://img.shields.io/npm/v/@antelopejs/payment-subscriptions?style=for-the-badge&labelColor=000000&color=000000"></a>
+<a href="./LICENSE"><img data-illustration alt="License" src="https://img.shields.io/npm/l/@antelopejs/payment-subscriptions?style=for-the-badge&labelColor=000000&color=000000"></a>
+<a href="https://discord.gg/g4pFt6eXqu"><img data-illustration alt="Discord" src="https://img.shields.io/badge/Discord-18181B?logo=discord&style=for-the-badge&color=000000"></a>
+<a href="./docs/1.introduction.md"><img data-illustration alt="Docs" src="https://img.shields.io/badge/Docs-18181B?style=for-the-badge&color=000000"></a>
 </div>
 
-Subscriptions for any AntelopeJS payment provider. Implements
-`@antelopejs/interface-subscriptions` on top of `@antelopejs/interface-payment`,
-using saved payment methods and off-session charges, and runs the renewal clock
-itself — for the providers that leave each renewal to the merchant (Adyen,
-Checkout.com, Mangopay), and for any provider at all.
+Subscriptions for any AntelopeJS payment provider. This module implements
+`@antelopejs/interface-subscriptions` on top of `@antelopejs/interface-payment`.
+It charges saved payment methods off-session and runs the renewal clock itself.
+It is the implementation for providers that leave each renewal to the merchant,
+such as Adyen, Checkout.com, and Mangopay, and it works with any payment
+provider.
 
 ## Installation
 
@@ -20,15 +21,19 @@ ajs project modules add @antelopejs/payment-subscriptions
 ajs project modules install
 ```
 
-Wire it alongside:
+Wire it with these modules:
 
-- a module implementing `@antelopejs/interface-payment` (the one that charges);
-- a module implementing `@antelopejs/interface-database` (where every
-  subscription lives — `@antelopejs/mongodb`, for instance);
-- optionally, `@antelopejs/redis`, for renewals charged on time rather than
-  within one poll.
+- A module that implements `@antelopejs/interface-payment`. That module makes
+  the charges.
+- A module that implements `@antelopejs/interface-database`, such as
+  `@antelopejs/mongodb`. Every subscription lives there.
+- Optionally, `@antelopejs/redis`, which implements both
+  `@antelopejs/interface-redis` and `@antelopejs/interface-redis-scheduler`.
+  With it, a renewal is charged when it is due instead of at the next poll.
 
-The example below deliberately selects the generic scheduler with Stripe payments and MongoDB storage. For Stripe-native billing, use Stripe alone instead. Supply the three environment variables before startup.
+The example below selects this module's renewal clock on purpose, with Stripe
+payments and MongoDB storage. For Stripe's own billing, wire Stripe alone
+instead. Set the three environment variables before startup.
 
 ```typescript [antelope.config.ts] docs-check
 import { defineConfig } from "@antelopejs/interface-core/config";
@@ -40,7 +45,7 @@ export default defineConfig({
       source: {
         type: "package",
         package: "@antelopejs/payment-subscriptions",
-        version: "^0.0.2",
+        version: "^0.0.3",
       },
     },
     stripe: {
@@ -72,59 +77,70 @@ export default defineConfig({
 ### With a payment module that has subscriptions of its own
 
 `@antelopejs/stripe` implements `@antelopejs/interface-subscriptions` natively.
-Wire it alone for Stripe's own subscriptions. Wiring this module beside it makes
-two providers of the interface, and the core picks one by module id, not by
-intent. To use this module's clock with Stripe charges, say so: add
-`disabledExports: ["@antelopejs/interface-subscriptions"]` to the Stripe module's
-entry, or an `importOverrides` entry on each consumer.
+Wire it alone for Stripe's own subscriptions. If you wire this module beside it,
+two modules implement the interface, and the core picks one by module ID. It
+does not guess which one you meant. To use this module's clock with Stripe
+charges, make the choice explicit. Add
+`disabledExports: ["@antelopejs/interface-subscriptions"]` to the entry of the
+Stripe module, or add an `importOverrides` entry on each consumer.
 
 ## How it works
 
-- **The database is the only source of truth.** Each subscription is one record
-  holding its period, its status, when it next needs attention and the events it
-  has yet to deliver. A renewal is recoverable from the database alone.
-- **The clock is only a trigger.** With a Redis scheduler wired, each subscription
-  is one task fired when it is due, and a slow database sweep catches anything
-  Redis loses. Without one, the database is polled. Redis is optional, and nothing
-  ever waits on it: a module with no Redis wired starts and renews. The suite
-  verifies normal Redis interface routing under AntelopeJS core 1.16.0.
-- **Charge recovery is bounded.** An instance claims a due renewal with a
-  conditional write before charging it, so of several racing instances one
+- **The database is the only source of truth.** Each subscription is one record.
+  The record holds its period, its status, when it next needs attention, and
+  the events it has not delivered yet. The database alone is enough to recover
+  a renewal.
+- **The clock only triggers work.** With a Redis scheduler wired, each
+  subscription is one Redis task that fires when it is due, and a slow database
+  sweep catches any task that Redis loses. Without one, the module polls the
+  database. Redis is optional, and nothing waits on it. A module with no Redis
+  wired starts and renews. The suite checks the Redis scheduler through normal
+  interface routing, with the `@antelopejs/core` version that `devDependencies`
+  pins.
+- **Charge recovery has a limit.** An instance claims a due renewal with a
+  conditional write before it charges it. Of several instances that race, one
   charges and the rest stand down. The charge also carries an idempotency key
-  derived from the subscription, the period and the attempt, so an instance that
-  takes over an abandoned claim can replay only within the configured provider
-  guarantee. Without that protection, an unknown result halts for reconciliation.
+  built from the subscription, the period, and the attempt. An instance that
+  takes over an abandoned claim can replay that key only within the configured
+  provider guarantee, `guaranteedReplayMs`. Without that protection, an unknown
+  result halts the subscription for reconciliation.
 
 ## Configuration
 
 Every field is optional.
 
-| Field                | Default                   | Meaning                                                                             |
-| -------------------- | ------------------------- | ----------------------------------------------------------------------------------- |
-| `pollIntervalMs`     | 60 000                    | How often the database is polled when no Redis scheduler is wired                   |
-| `sweepIntervalMs`    | 900 000                   | How often the database is swept when one is                                         |
-| `leaseMs`            | 300 000                   | How long a claim on a renewal lasts before another instance may take it over        |
-| `retryDelaysMs`      | one, three and seven days | The failed-renewal policy: one retry per entry, then the subscription ends          |
-| `settlementPollMs`   | 3 600 000                 | How often a charge that is still settling is read again                             |
-| `errorBackoffMs`     | 300 000                   | How long to wait when the payment provider cannot be reached at all                 |
-| `batchSize`          | 100                       | How many due subscriptions one sweep takes on                                       |
-| `providerSchedule`   | `payment-interface`       | How the schedule is mirrored with the provider; see the provider schedule document  |
-| `guaranteedReplayMs` | `0`                       | Guaranteed provider idempotency retention, with safety margin; zero disables replay |
+| Field                | Default                    | Meaning                                                                                             |
+| -------------------- | -------------------------- | --------------------------------------------------------------------------------------------------- |
+| `pollIntervalMs`     | 60 000                     | How often the module polls the database when no Redis scheduler is wired                            |
+| `sweepIntervalMs`    | 900 000                    | How often the module sweeps the database when a Redis scheduler is wired                            |
+| `leaseMs`            | 300 000                    | How long a claim on a renewal lasts before another instance can take it over                        |
+| `retryDelaysMs`      | one, three, and seven days | The failed-renewal policy. One retry per entry, then the subscription ends                          |
+| `settlementPollMs`   | 3 600 000                  | How often the module reads a charge that is still settling again                                    |
+| `errorBackoffMs`     | 300 000                    | How long to wait when the payment provider cannot be reached at all                                 |
+| `batchSize`          | 100                        | How many due subscriptions one sweep processes                                                      |
+| `providerSchedule`   | `payment-interface`        | How the module mirrors the schedule with the provider. See the provider schedule page               |
+| `guaranteedReplayMs` | `0`                        | The idempotency retention that the provider guarantees, minus a safety margin. Zero disables replay |
 
-Use Stripe's native subscriptions by default for Stripe users; this module is an
-explicit fallback. Before enabling retries of uncertain requests, verify the
-provider's retention guarantee for every wired account. There is no portable
-capability API and no assumed Stripe-style 24-hour window. See
-[safe recovery](./docs/3.failed-renewals.md#reconciliation-and-operational-recovery).
+Durations are in milliseconds. A `guaranteedReplayMs` that is negative or not
+finite makes the module throw
+`guaranteedReplayMs must be a finite non-negative duration` at construction.
+An unknown `providerSchedule` name also throws at construction.
+
+For Stripe, use Stripe's native subscriptions by default. This module is a
+fallback that you choose explicitly. Before you allow retries of uncertain
+requests, check the retention guarantee of the provider for every wired account.
+No portable API reports that capability, and the module does not assume a
+Stripe-style 24-hour window. See
+[reconciliation and operational recovery](./docs/3.failed-renewals.md#reconciliation-and-operational-recovery).
 
 ## Documentation
 
-| Document                                               | Contents                                                    |
-| ------------------------------------------------------ | ----------------------------------------------------------- |
-| [Introduction](./docs/1.introduction.md)               | What it implements, what it needs, what it records          |
-| [The renewal clock](./docs/2.renewal-clock.md)         | Polling and Redis, claims, idempotency, several instances   |
-| [Failed renewals](./docs/3.failed-renewals.md)         | The retry policy, settling charges, an unreachable provider |
-| [The provider schedule](./docs/4.provider-schedule.md) | The seam for providers that store a schedule (Mangopay)     |
+| Document                                               | Contents                                                                  |
+| ------------------------------------------------------ | ------------------------------------------------------------------------- |
+| [Introduction](./docs/1.introduction.md)               | What it implements, what it needs, what it records                        |
+| [The renewal clock](./docs/2.renewal-clock.md)         | Polling and Redis, claims, idempotency, several instances                 |
+| [Failed renewals](./docs/3.failed-renewals.md)         | The retry policy, settling charges, an unreachable provider               |
+| [The provider schedule](./docs/4.provider-schedule.md) | The extension point for providers that store a schedule, such as Mangopay |
 
 ## Compatibility
 
@@ -141,19 +157,23 @@ capability API and no assumed Stripe-style 24-hour window. See
 
 <!-- antelopejs-docs-compat:end -->
 
-These are the manifest's interface requirements. Provider modules can impose additional requirements; the example above uses Stripe 1.1 and MongoDB 1.6.
+The table lists the interface requirements in `package.json`. Provider modules
+can add requirements of their own. Check the compatibility table of each
+provider module that you wire.
 
 ## Testing
 
-`pnpm test` runs the suite twice, once per clock, against a real MongoDB and —
-for the second run — a real Redis, both started by the suite. The interface's
-conformance suite runs in both. A test-only payment provider in
-`test/payment-provider` stands in for the payment module; it is never published.
-The scripts use the local AntelopeJS core 1.16.0 runner (`ajs module test .`).
+`pnpm test` runs the suite twice, once per clock. Both runs use a real MongoDB,
+and the second run also uses a real Redis. The suite starts both. The
+conformance suite of the interface runs in both. A test-only payment provider in
+`test/payment-provider` stands in for the payment module, and it is never
+published. The scripts run `ajs module test .` from the `@antelopejs/core`
+version that `devDependencies` pins.
 
 ## Contributing
 
-Read [CONTRIBUTING.md](./CONTRIBUTING.md). Use Node.js 24 and pnpm 10.6.5:
+Read [CONTRIBUTING.md](./CONTRIBUTING.md). Use the Node.js version in `.nvmrc`
+and the pnpm version in the `packageManager` field of `package.json`:
 
 ```bash
 pnpm install --frozen-lockfile

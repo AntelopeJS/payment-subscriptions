@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.0.4
+
+[compare changes](https://github.com/AntelopeJS/payment-subscriptions/compare/v0.0.3...v0.0.4)
+
+### 🚀 Enhancements
+
+- **skills:** Add the verify-module verification skill ([#14](https://github.com/AntelopeJS/payment-subscriptions/pull/14))
+
+### 🩹 Fixes
+
+- **skills:** Make the verify containments catch their doors ([#15](https://github.com/AntelopeJS/payment-subscriptions/pull/15))
+
+### 📖 Documentation
+
+- **readme:** Use one Discord invite ([#22](https://github.com/AntelopeJS/payment-subscriptions/pull/22))
+- **github:** Send questions and ideas to Discord ([#23](https://github.com/AntelopeJS/payment-subscriptions/pull/23))
+- **readme:** Link the package to AntelopeJS and AntelopeJS DMS ([c2f91de](https://github.com/AntelopeJS/payment-subscriptions/commit/c2f91de))
+
+### 📦 Build
+
+- **deps:** Bump @antelopejs/tooling-configs to 0.2.17 ([#16](https://github.com/AntelopeJS/payment-subscriptions/pull/16))
+
+### 🏡 Chore
+
+- Land the cleanup campaign on main ([#29](https://github.com/AntelopeJS/payment-subscriptions/pull/29))
+
+### ❤️ Contributors
+
+- Antony Rizzitelli ([@Upd4ting](http://github.com/Upd4ting))
+
 ## v0.0.3
 
 [compare changes](https://github.com/AntelopeJS/payment-subscriptions/compare/v0.0.2...v0.0.3)

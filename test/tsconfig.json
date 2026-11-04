@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "noEmit": true,
+    "allowJs": true,
+    "declaration": false
+  },
+  "files": [
+    "boot-probe/index.js",
+    "payment-provider/index.js",
+    "payment-provider/index.d.ts"
+  ]
+}

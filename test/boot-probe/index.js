@@ -7,6 +7,12 @@ const POLL_MS = 100;
 const POLLS = 100;
 const AMOUNT = { value: 1900, currency: "EUR" };
 
+/**
+ * The id of a payment method saved for `customer` by a charge.
+ *
+ * @param {string} customer
+ * @returns {Promise<string>}
+ */
 async function savedMethod(customer) {
   await payment.CreatePayment(
     {
@@ -51,8 +57,12 @@ async function run() {
 module.exports = {
   construct() {},
   start() {
-    run().catch((error) =>
-      process.stdout.write(`PROBE FAILED ${error.message}\n`),
+    run().catch(
+      /** @param {unknown} error */
+      (error) =>
+        process.stdout.write(
+          `PROBE FAILED ${error instanceof Error ? error.message : String(error)}\n`,
+        ),
     );
   },
 };

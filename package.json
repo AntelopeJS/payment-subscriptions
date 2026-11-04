@@ -49,9 +49,7 @@
     "sync": "antelopejs-sync",
     "sync:check": "antelopejs-sync --check",
     "suppressions": "antelopejs-suppressions",
-    "suppressions:update": "antelopejs-suppressions --update",
-    "ratchet": "antelopejs-ratchet",
-    "ratchet:update": "antelopejs-ratchet --update"
+    "suppressions:update": "antelopejs-suppressions --update"
   },
   "dependencies": {
     "@antelopejs/interface-core": ">=0.0.5 <1.0.0",
@@ -63,7 +61,7 @@
     "@antelopejs/core": "1.16.0",
     "@antelopejs/mongodb": "^1.6.0",
     "@antelopejs/redis": "^1.0.3",
-    "@antelopejs/tooling-configs": "^0.2.17",
+    "@antelopejs/tooling-configs": "^0.2.18",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.19.15",
     "eslint-plugin-perfectionist": "^5.11.0",
@@ -92,6 +90,9 @@
     "test": "src/test/antelope.test.ts",
     "skills": [
       "./skills"
-    ]
+    ],
+    "docs": {
+      "standard": true
+    }
   }
 }

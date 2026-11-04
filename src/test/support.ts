@@ -5,7 +5,6 @@ import {
   CreateCustomer,
   CreatePayment,
   ListPaymentMethods,
-  type PaymentRequest,
 } from "@antelopejs/interface-payment";
 import {
   CreateSubscription,
@@ -16,6 +15,7 @@ import {
   type SubscriptionRequest,
 } from "@antelopejs/interface-subscriptions";
 
+import { type LedgerEntry, testControl } from "../../test/payment-provider";
 import { Runtime } from "../runtime";
 import { start, stop } from "../index";
 import { type Clock, SYSTEM_CLOCK, UseClock } from "../clock";
@@ -37,28 +37,7 @@ const PERIOD_VALUE = 1900;
 export const CLOCK_UNDER_TEST =
   process.env.ANTELOPE_SUBSCRIPTIONS_TEST_CLOCK ?? "polling";
 
-export interface LedgerEntry {
-  request: PaymentRequest;
-  idempotencyKey: string;
-  provider: string | undefined;
-  replayed: boolean;
-  unreachable?: boolean;
-}
-
-interface ProviderControl {
-  TOKENS: Record<
-    "succeeds" | "declinesOffSession" | "settlesLater" | "failsLater",
-    string
-  >;
-  setUnreachable(isUnreachable: boolean): void;
-  setLosesResponses(losesResponses: boolean): void;
-  ledger(): LedgerEntry[];
-  chargesFor(subscriptionId: string): LedgerEntry[];
-  paymentStatus(id: string, provider?: string): string | undefined;
-}
-
-export const provider: ProviderControl =
-  require("../../test/payment-provider").testControl;
+export const provider = testControl;
 export const TOKENS = provider.TOKENS;
 
 export function chargesMade(subscriptionId: string): LedgerEntry[] {

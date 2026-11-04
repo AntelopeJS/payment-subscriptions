@@ -1,6 +1,19 @@
 const payment = require("@antelopejs/interface-payment");
 const { ImplementInterface } = require("@antelopejs/interface-core");
 
+/**
+ * @typedef {import("@antelopejs/interface-payment").Customer} Customer
+ * @typedef {import("@antelopejs/interface-payment").CustomerRequest} CustomerRequest
+ * @typedef {import("@antelopejs/interface-payment").Payment} Payment
+ * @typedef {import("@antelopejs/interface-payment").PaymentMethod} PaymentMethod
+ * @typedef {import("@antelopejs/interface-payment").PaymentRequest} PaymentRequest
+ * @typedef {import("@antelopejs/interface-payment").PaymentStatus} PaymentStatus
+ * @typedef {import("./index.d.ts").LedgerEntry} LedgerEntry
+ * @typedef {import("./index.d.ts").TestControl} TestControl
+ */
+
+/** @typedef {"tok_succeeds" | "tok_declines_off_session" | "tok_settles_later" | "tok_fails_later"} Token */
+
 const TOKENS = Object.freeze({
   succeeds: "tok_succeeds",
   declinesOffSession: "tok_declines_off_session",
@@ -12,6 +25,7 @@ const ACCOUNTS = ["default", "secondary"];
 const READS_BEFORE_SETTLING = 2;
 const ZERO = 0;
 
+/** @type {Record<Token, PaymentStatus>} */
 const OFF_SESSION_OUTCOMES = {
   [TOKENS.succeeds]: "succeeded",
   [TOKENS.declinesOffSession]: "failed",
@@ -19,6 +33,7 @@ const OFF_SESSION_OUTCOMES = {
   [TOKENS.failsLater]: "pending",
 };
 
+/** @type {Partial<Record<Token, PaymentStatus>>} */
 const SETTLED_OUTCOMES = {
   [TOKENS.settlesLater]: "succeeded",
   [TOKENS.failsLater]: "failed",
@@ -30,6 +45,19 @@ const DECLINE = Object.freeze({
   providerCode: "test_declined",
 });
 
+/**
+ * @typedef {Payment & { token: Token, reads: number, request?: PaymentRequest }} PaymentRecord
+ * @typedef {{ id: string, customer: string, token: Token, createdAt: number }} SavedMethod
+ * @typedef {{
+ *   customers: Map<string, Customer>,
+ *   methods: Map<string, SavedMethod>,
+ *   payments: Map<string, PaymentRecord>,
+ *   replies: Map<string, string>,
+ *   sequence: number,
+ * }} Account
+ */
+
+/** @returns {Account} */
 function emptyAccount() {
   return {
     customers: new Map(),
@@ -40,6 +68,7 @@ function emptyAccount() {
   };
 }
 
+/** @type {{ accounts: Map<string, Account>, ledger: LedgerEntry[], isUnreachable: boolean, losesResponses: boolean }} */
 const state = {
   accounts: new Map(),
   ledger: [],
@@ -55,24 +84,40 @@ function reset() {
 }
 reset();
 
+/**
+ * @param {string | undefined} provider
+ * @returns {Account}
+ */
 function account(provider) {
   const found = state.accounts.get(provider ?? "default");
   if (!found) throw new payment.PaymentError(`No such account: ${provider}`);
   return found;
 }
 
+/**
+ * @param {Account} store
+ * @param {string} prefix
+ * @returns {string}
+ */
 function mint(store, prefix) {
   store.sequence += 1;
   return `${prefix}_${store.sequence}`;
 }
 
+/**
+ * @param {Account} store
+ * @param {string | undefined} method
+ * @returns {Token}
+ */
 function behaviourOf(store, method) {
-  if (Object.values(TOKENS).includes(method)) return method;
+  const known = Object.values(TOKENS).find((token) => token === method);
+  if (known) return known;
   const saved = store.methods.get(method);
   if (!saved) throw new payment.CustomerNotFoundError(method, "payment method");
   return saved.token;
 }
 
+/** @param {PaymentRequest} request */
 function assertConsistent(request) {
   if (request.savePaymentMethod && request.offSession) {
     throw new payment.PaymentError(
@@ -89,12 +134,25 @@ function assertConsistent(request) {
   }
 }
 
+/**
+ * @param {Token} token
+ * @param {PaymentRequest} request
+ * @returns {PaymentStatus}
+ */
 function outcomeFor(token, request) {
   return request.offSession ? OFF_SESSION_OUTCOMES[token] : "succeeded";
 }
 
+/** @type {readonly ("customer" | "paymentMethod")[]} */
 const OPTIONAL_FIELDS = ["customer", "paymentMethod"];
 
+/**
+ * @param {Account} store
+ * @param {PaymentRequest} request
+ * @param {Token} token
+ * @param {PaymentStatus} status
+ * @returns {PaymentRecord}
+ */
 function buildPayment(store, request, token, status) {
   const zero = { value: ZERO, currency: request.amount.currency };
   const record = {
@@ -116,6 +174,10 @@ function buildPayment(store, request, token, status) {
   return record;
 }
 
+/**
+ * @param {PaymentRecord} record
+ * @returns {Payment}
+ */
 function publicView(record) {
   const view = { ...record };
   delete view.token;
@@ -124,6 +186,11 @@ function publicView(record) {
   return view;
 }
 
+/**
+ * @param {Account} store
+ * @param {string | undefined} customer
+ * @param {Token} token
+ */
 function saveMethod(store, customer, token) {
   const id = mint(store, "pm");
   store.methods.set(id, {
@@ -134,6 +201,12 @@ function saveMethod(store, customer, token) {
   });
 }
 
+/**
+ * @param {Account} store
+ * @param {PaymentRequest} request
+ * @param {Token} token
+ * @returns {PaymentRecord}
+ */
 function charge(store, request, token) {
   const record = buildPayment(
     store,
@@ -157,8 +230,14 @@ function assertReachable() {
   }
 }
 
+/** @type {readonly ("paymentMethod" | "customer")[]} */
 const COMPARED_FIELDS = ["paymentMethod", "customer"];
 
+/**
+ * @param {PaymentRecord} original
+ * @param {PaymentRequest} request
+ * @returns {Payment}
+ */
 function replay(original, request) {
   const differs =
     COMPARED_FIELDS.some(
@@ -173,6 +252,10 @@ function replay(original, request) {
   return publicView(original);
 }
 
+/**
+ * @param {PaymentRecord} record
+ * @returns {Payment}
+ */
 function loseResponse(record) {
   if (!state.losesResponses) return publicView(record);
   throw new payment.PaymentError(
@@ -181,6 +264,7 @@ function loseResponse(record) {
   );
 }
 
+/** @type {typeof payment.CreatePayment} */
 async function CreatePayment(request, idempotencyKey, provider) {
   assertConsistent(request);
   const store = account(provider);
@@ -215,6 +299,7 @@ async function CreatePayment(request, idempotencyKey, provider) {
   return loseResponse(record);
 }
 
+/** @param {PaymentRecord} record */
 function settleOnRead(record) {
   record.reads += 1;
   if (record.status !== "pending" || record.reads < READS_BEFORE_SETTLING)
@@ -225,6 +310,7 @@ function settleOnRead(record) {
   if (record.status === "failed") record.failure = { ...DECLINE };
 }
 
+/** @type {typeof payment.GetPayment} */
 async function GetPayment(id, provider) {
   assertReachable();
   const record = account(provider).payments.get(id);
@@ -233,6 +319,7 @@ async function GetPayment(id, provider) {
   return publicView(record);
 }
 
+/** @type {typeof payment.CreateCustomer} */
 async function CreateCustomer(request, idempotencyKey, provider) {
   const store = account(provider);
   const replayed = store.replies.get(idempotencyKey);
@@ -243,12 +330,14 @@ async function CreateCustomer(request, idempotencyKey, provider) {
   return { id, ...request };
 }
 
+/** @type {typeof payment.GetCustomer} */
 async function GetCustomer(id, provider) {
   const customer = account(provider).customers.get(id);
   if (!customer) throw new payment.CustomerNotFoundError(id);
   return customer;
 }
 
+/** @type {typeof payment.DeleteCustomer} */
 async function DeleteCustomer(id, _idempotencyKey, provider) {
   const store = account(provider);
   if (!store.customers.delete(id)) throw new payment.CustomerNotFoundError(id);
@@ -257,6 +346,7 @@ async function DeleteCustomer(id, _idempotencyKey, provider) {
   }
 }
 
+/** @type {typeof payment.ListPaymentMethods} */
 async function ListPaymentMethods(customer, provider) {
   const store = account(provider);
   if (!store.customers.has(customer))
@@ -272,12 +362,17 @@ async function ListPaymentMethods(customer, provider) {
     }));
 }
 
+/** @type {typeof payment.DetachPaymentMethod} */
 async function DetachPaymentMethod(id, _idempotencyKey, provider) {
   if (!account(provider).methods.delete(id)) {
     throw new payment.CustomerNotFoundError(id, "payment method");
   }
 }
 
+/**
+ * @param {string} operation
+ * @returns {() => Promise<never>}
+ */
 function unsupported(operation) {
   return async () => {
     throw new payment.UnsupportedOperationError(operation);
@@ -309,21 +404,29 @@ function construct() {
   ImplementInterface(payment, implementation);
 }
 
+/** @type {TestControl} */
 const testControl = {
   TOKENS,
   reset,
+  /** @param {boolean} isUnreachable */
   setUnreachable: (isUnreachable) => {
     state.isUnreachable = isUnreachable;
   },
+  /** @param {boolean} losesResponses */
   setLosesResponses: (losesResponses) => {
     state.losesResponses = losesResponses;
   },
   ledger: () => state.ledger,
+  /** @param {string} subscriptionId */
   chargesFor: (subscriptionId) =>
     state.ledger.filter(
       (entry) =>
         entry.request.metadata?.antelopeSubscription === subscriptionId,
     ),
+  /**
+   * @param {string} id
+   * @param {string} [provider]
+   */
   paymentStatus: (id, provider) => account(provider).payments.get(id)?.status,
 };
 

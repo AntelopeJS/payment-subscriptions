@@ -1,5 +1,6 @@
 import type { VerifyConfig } from "@antelopejs/tooling-configs/verify";
 
+import { chargeJourneys } from "./journeys-charge.ts";
 import { changeJourneys } from "./journeys-change.ts";
 import { createJourneys } from "./journeys-create.ts";
 import { renewalJourneys } from "./journeys-renewal.ts";
@@ -52,7 +53,19 @@ const config: VerifyConfig = {
   moduleConfig() {
     return { pollIntervalMs: 100 };
   },
-  journeys: { ...createJourneys, ...changeJourneys, ...renewalJourneys },
+  journeys: { ...createJourneys, ...changeJourneys, ...chargeJourneys, ...renewalJourneys },
+  formal: [
+    {
+      name: "formal-billing-lease",
+      covers: ["src/engine.ts", "src/transitions.ts", "src/records.ts"],
+      files: [".agents/skills/formal-billing-lease/**"],
+      command: ["node", ".agents/skills/formal-billing-lease/check.mjs", "--full"],
+      baseCommand: ["node", ".agents/skills/formal-billing-lease/check.mjs"],
+      violation: /^(?:finding|BROKEN|CHANGED|HOLDS) +(\w+)/gm,
+      passing: /(?<=^holds +(?:\w+, )*)(\w+)(?=,| \()/gm,
+      behaviour: { kind: "emit" },
+    },
+  ],
 };
 
 export default config;

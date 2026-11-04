@@ -48,22 +48,15 @@ const PAYMENT_INTERFACE_SCHEDULE: ProviderSchedule = Object.freeze({
   release: () => Promise.resolve(),
 });
 
-const SCHEDULES = {
-  "payment-interface": PAYMENT_INTERFACE_SCHEDULE,
-} satisfies Record<string, ProviderSchedule>;
-
-function lookup<Value>(
-  table: Readonly<Record<string, Value>>,
-  key: string,
-): Value | undefined {
-  return table[key];
-}
+const SCHEDULES: ReadonlyMap<string, ProviderSchedule> = new Map([
+  ["payment-interface", PAYMENT_INTERFACE_SCHEDULE],
+]);
 
 export function ResolveSchedule(name: string): ProviderSchedule {
-  const schedule = lookup(SCHEDULES, name);
+  const schedule = SCHEDULES.get(name);
   if (!schedule) {
     throw new Error(
-      `Unknown providerSchedule "${name}"; known: ${Object.keys(SCHEDULES).join(", ")}`,
+      `Unknown providerSchedule "${name}"; known: ${[...SCHEDULES.keys()].join(", ")}`,
     );
   }
   return schedule;

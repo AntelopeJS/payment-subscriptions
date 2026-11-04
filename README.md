@@ -14,6 +14,8 @@ It is the implementation for providers that leave each renewal to the merchant,
 such as Adyen, Checkout.com, and Mangopay, and it works with any payment
 provider.
 
+Part of [AntelopeJS](https://github.com/AntelopeJS/antelopejs), the TypeScript framework where modules depend on contracts and the application chooses the provider. Built by the team behind [AntelopeJS DMS](https://github.com/AntelopeJS/dms).
+
 ## Installation
 
 ```bash

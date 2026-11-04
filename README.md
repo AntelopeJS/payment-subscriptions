@@ -13,6 +13,8 @@ using saved payment methods and off-session charges, and runs the renewal clock
 itself — for the providers that leave each renewal to the merchant (Adyen,
 Checkout.com, Mangopay), and for any provider at all.
 
+Part of [AntelopeJS](https://github.com/AntelopeJS/antelopejs), the TypeScript framework where modules depend on contracts and the application chooses the provider. Built by the team behind [AntelopeJS DMS](https://github.com/AntelopeJS/dms).
+
 ## Installation
 
 ```bash

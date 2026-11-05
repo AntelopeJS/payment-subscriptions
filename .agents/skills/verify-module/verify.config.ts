@@ -12,32 +12,27 @@ const config: VerifyConfig = {
     data: {
       globs: ["src/engine.ts", "src/records.ts"],
       funnels: ["src/records.ts"],
-      containments: ["create/idempotent-create"],
       why: "every subscription is one record in the database, the only source of truth: a wrong write loses or duplicates a customer's billing state",
     },
     format: {
       globs: ["src/records.ts", "src/initial.ts"],
       funnels: [],
-      containments: ["renewal/survives-restart"],
       why: "the stored record shape (schema payment-subscriptions, table subscriptions) is read back by every later release; the journey proves a restart reads what the previous process wrote, not records written by an older release",
     },
     contract: {
       globs: ["package.json"],
       funnels: [],
-      containments: [],
       why: "the module config keys, `antelopeJs.implements` and the interface ranges it depends on",
     },
     outbound: {
       globs: ["src/schedule.ts"],
       funnels: ["src/schedule.ts"],
-      containments: [],
       why: "every renewal is an off-session CreatePayment on the customer's saved method: money leaves the customer's account",
     },
     exposure: null,
     publish: {
       globs: ["package.json", ".release-it.json", "changelogen.config.json", ".github/workflows/release.yml"],
       funnels: [],
-      containments: [],
       why: "the package name and release workflow claim @antelopejs/payment-subscriptions on npm",
     },
   },

@@ -1,3 +1,6 @@
+import { availableParallelism, homedir } from "node:os";
+import { join } from "node:path";
+
 import { RedisMemoryServer } from "redis-memory-server";
 import { MongoMemoryServer } from "mongodb-memory-server-core";
 import {
@@ -10,6 +13,10 @@ const CLOCK =
     ? "redis"
     : "polling";
 const MONGO_VERSION = "8.0.8";
+const REDIS_BINARY = {
+  version: "8.10.2",
+  downloadDir: join(homedir(), ".cache", "redis-binaries"),
+};
 const TEST_POLL_MS = 100;
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -31,7 +38,8 @@ function exitOnceSchedulerTimerIsAllThatIsLeft(): void {
 
 async function redisModules(): Promise<Record<string, AntelopeModuleConfig>> {
   if (CLOCK !== "redis") return {};
-  redis = new RedisMemoryServer();
+  process.env.MAKEFLAGS ??= `-j${availableParallelism()}`;
+  redis = new RedisMemoryServer({ binary: REDIS_BINARY });
   const url = `redis://${await redis.getHost()}:${await redis.getPort()}`;
   process.env.ANTELOPE_SUBSCRIPTIONS_TEST_REDIS_URL = url;
   return {

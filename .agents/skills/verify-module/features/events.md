@@ -1,6 +1,7 @@
 ---
 covers:
-  - src/events.ts
+  - src/*.ts
+  - test/payment-provider/*
 docs:
   - README.md
   - docs/1.introduction.md

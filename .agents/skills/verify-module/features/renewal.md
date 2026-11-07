@@ -1,12 +1,7 @@
 ---
 covers:
-  - src/engine.ts
-  - src/transitions.ts
-  - src/triggers.ts
-  - src/clock.ts
-  - src/schedule.ts
-  - src/index.ts
-  - src/records.ts
+  - src/*.ts
+  - test/payment-provider/*
 docs:
   - README.md
   - docs/2.renewal-clock.md

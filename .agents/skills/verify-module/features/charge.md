@@ -11,7 +11,7 @@ journeys:
 
 # Charge
 
-Every renewal charge leaves through `src/schedule.ts` as an off-session `CreatePayment` on the customer's saved method.
+Every charge, the first and each renewal, leaves through `src/schedule.ts` as an off-session `CreatePayment` on the customer's saved method.
 
 ## Sub-features
 

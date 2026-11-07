@@ -1,9 +1,7 @@
 ---
 covers:
-  - src/implementation.ts
-  - src/initial.ts
-  - src/view.ts
-  - src/calendar.ts
+  - src/*.ts
+  - test/payment-provider/*
 docs:
   - README.md
   - docs/1.introduction.md

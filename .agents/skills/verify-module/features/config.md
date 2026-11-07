@@ -1,7 +1,7 @@
 ---
 covers:
-  - src/config.ts
-  - src/runtime.ts
+  - src/*.ts
+  - test/payment-provider/*
 docs:
   - README.md
   - docs/2.renewal-clock.md

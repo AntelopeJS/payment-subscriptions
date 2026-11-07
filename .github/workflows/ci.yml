@@ -39,7 +39,8 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.cache/antelopejs-formal
-          key: tla2tools-1.7.4
+          key: antelopejs-formal-${{ hashFiles('.agents/skills/formal-billing-lease/**', 'pnpm-lock.yaml') }}
+          restore-keys: antelopejs-formal-
       - run: node .agents/skills/formal-billing-lease/check.mjs
 
   checks:

@@ -150,10 +150,10 @@ Stripe-style 24-hour window. See
 
 | Package                                 | Supported        | Tested with |
 | --------------------------------------- | ---------------- | ----------- |
-| `@antelopejs/interface-core`            | `>=0.0.5 <1.0.0` | `0.3.0`     |
+| `@antelopejs/interface-core`            | `>=0.2.4 <1.0.0` | `0.4.0`     |
 | `@antelopejs/interface-database`        | `>=0.2.0 <1.0.0` | `0.2.0`     |
 | `@antelopejs/interface-payment`         | `>=0.0.2 <1.0.0` | `0.0.2`     |
-| `@antelopejs/interface-redis`           | `>=0.0.6 <1.0.0` | `0.0.8`     |
+| `@antelopejs/interface-redis`           | `>=0.0.9 <1.0.0` | `0.0.9`     |
 | `@antelopejs/interface-redis-scheduler` | `>=0.0.9 <1.0.0` | `0.0.9`     |
 | `@antelopejs/interface-subscriptions`   | `>=0.1.0 <0.2.0` | `0.1.0`     |
 

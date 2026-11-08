@@ -96,6 +96,13 @@ export function answer<Value = never>(result: HttpResult): Answer<Value> {
   return result.json as Answer<Value>;
 }
 
+type Json = Parameters<typeof equal>[2];
+
+/** An array for `equal`, with each missing value as `null`, which is how `JSON.stringify` writes it in an array. */
+export function tuple(...values: (Json | undefined)[]): Json[] {
+  return values.map((value) => value ?? null);
+}
+
 export interface Sub {
   id: string;
   reference: string;

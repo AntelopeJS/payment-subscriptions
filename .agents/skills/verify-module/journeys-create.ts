@@ -16,6 +16,7 @@ import {
   startStack,
   stored,
   storedCount,
+  tuple,
   type Overrides,
   type Sub,
 } from "./stack.ts";
@@ -40,14 +41,14 @@ export const createJourneys = {
           equal("not set to cancel", sub.cancelAtPeriodEnd, false),
         ]);
         const got = await call(context, stack, "GetSubscription", "GetSubscription", [sub.id]);
-        context.expect(got.folder, [equal("GetSubscription answers the same subscription", [answer<Sub>(got).value?.id, answer<Sub>(got).value?.status], [sub.id, "active"])]);
+        context.expect(got.folder, [equal("GetSubscription answers the same subscription", tuple(answer<Sub>(got).value?.id, answer<Sub>(got).value?.status), tuple(sub.id, "active"))]);
         const list = await call(context, stack, "ListSubscriptions", "ListSubscriptions", [prepared.customer]);
         context.expect(list.folder, [equal("the customer has exactly this subscription", (answer<Sub[]>(list).value ?? []).map((entry) => entry.id), [sub.id])]);
         const doc = await stored(context, "MongoDB record", sub.id);
         context.expect(doc.folder, [
-          equal("the record is live and active", [doc.record?.phase, doc.record?.status], ["live", "active"]),
-          equal("the record holds customer, method and amount", [doc.record?.customer, doc.record?.paymentMethod, doc.record?.amount], [prepared.customer, prepared.method, AMOUNT]),
-          equal("the record holds the charge", doc.record?.latestPayment, sub.latestPayment),
+          equal("the record is live and active", tuple(doc.record?.phase, doc.record?.status), tuple("live", "active")),
+          equal("the record holds customer, method and amount", tuple(doc.record?.customer, doc.record?.paymentMethod, doc.record?.amount), tuple(prepared.customer, prepared.method, AMOUNT)),
+          equal("the record holds the charge", doc.record?.latestPayment ?? null, sub.latestPayment ?? null),
         ]);
         const total = await storedCount(context, "MongoDB record count");
         context.expect(total.folder, [equal("exactly one record", total.count, "1")]);
@@ -63,7 +64,7 @@ export const createJourneys = {
         const prepared = await prepare(context, stack, SUCCEEDS);
         const first = await create(context, stack, { name: "first create", prepared: prepared, key: "dup-key" });
         const again = await create(context, stack, { name: "second create with the same key", prepared: prepared, key: "dup-key" });
-        context.expect(again.folder, [equal("the same key answers the same subscription", [again.sub.id, again.sub.latestPayment], [first.sub.id, first.sub.latestPayment])]);
+        context.expect(again.folder, [equal("the same key answers the same subscription", tuple(again.sub.id, again.sub.latestPayment), tuple(first.sub.id, first.sub.latestPayment))]);
         const one = await storedCount(context, "MongoDB record count after the replay");
         context.expect(one.folder, [equal("one record", one.count, "1")]);
         const other = await create(context, stack, { name: "create with another key", prepared: prepared, key: "other-key", overrides: { reference: "verify-second" } });
@@ -83,7 +84,7 @@ export const createJourneys = {
       async run(context) {
         const stack = await startStack(context, "ajs project dev");
         const list = await call(context, stack, "ListSubscriptions of an unknown customer", "ListSubscriptions", ["cus_nobody"]);
-        context.expect(list.folder, [equal("the list is empty", answer<Sub[]>(list).value, [])]);
+        context.expect(list.folder, [equal("the list is empty", answer<Sub[]>(list).value?.length, 0)]);
         const missing = await call(context, stack, "GetSubscription of an unknown id", "GetSubscription", ["sub_missing"]);
         context.expect(missing.folder, [equal("the call was rejected", answer(missing).ok, false), has("the rejection is a SubscriptionNotFoundError", failure(missing), /^SubscriptionNotFoundError: No such subscription: sub_missing/)]);
         const total = await storedCount(context, "MongoDB record count");
@@ -127,18 +128,18 @@ export const createJourneys = {
           equal("the subscription is trialing", trial.sub.status, "trialing"),
           equal("the trial end is kept", trial.sub.trialEnd, trialEnd),
           equal("the first period ends when the trial does", trial.sub.currentPeriodEnd, trialEnd),
-          equal("nothing was charged", trial.sub.latestPayment, undefined),
+          equal("nothing was charged", trial.sub.latestPayment === undefined, true),
         ]);
         const anchor = Date.now() + 2 * 60 * 60 * 1000;
         const anchored = await create(context, stack, { name: "create with an anchor", prepared: prepared, key: "anchor-key", overrides: { reference: "verify-anchor", billingAnchor: anchor } });
         context.expect(anchored.folder, [
           equal("an anchored subscription is active", anchored.sub.status, "active"),
-          equal("it has no trial", anchored.sub.trialEnd, undefined),
+          equal("it has no trial", anchored.sub.trialEnd === undefined, true),
           equal("the first period ends at the anchor", anchored.sub.currentPeriodEnd, anchor),
-          equal("nothing was charged", anchored.sub.latestPayment, undefined),
+          equal("nothing was charged", anchored.sub.latestPayment === undefined, true),
         ]);
         const doc = await stored(context, "MongoDB trial record", trial.sub.id);
-        context.expect(doc.folder, [equal("the record is trialing with the same end", [doc.record?.status, doc.record?.trialEnd, doc.record?.latestPayment], ["trialing", trialEnd, null])]);
+        context.expect(doc.folder, [equal("the record is trialing with the same end", tuple(doc.record?.status, doc.record?.trialEnd, doc.record?.latestPayment), tuple("trialing", trialEnd, null))]);
         await context.stop("SIGINT", stack.app);
       },
     },
@@ -151,7 +152,7 @@ export const createJourneys = {
         const declined = await call(context, stack, "create on a declining method", "CreateSubscription", [request(prepared), "declined-key"]);
         context.expect(declined.folder, [equal("the call was rejected", answer(declined).ok, false), has("the rejection is a SubscriptionPaymentError", failure(declined), /^SubscriptionPaymentError: The first period could not be charged/)]);
         const list = await call(context, stack, "ListSubscriptions", "ListSubscriptions", [prepared.customer]);
-        context.expect(list.folder, [equal("the customer has no subscription", answer<Sub[]>(list).value, [])]);
+        context.expect(list.folder, [equal("the customer has no subscription", answer<Sub[]>(list).value?.length, 0)]);
         const replay = await call(context, stack, "replay the declined key", "CreateSubscription", [request(prepared), "declined-key"]);
         context.expect(replay.folder, [has("the replay is refused the same way", failure(replay), /^SubscriptionPaymentError/)]);
         await context.stop("SIGINT", stack.app);

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import {
   CancelSubscription,
   GetSubscription,
+  InvalidSubscriptionRequestError,
+  type Subscription,
   UpdateSubscriptionPaymentMethod,
 } from "@antelopejs/interface-subscriptions";
 
@@ -27,6 +29,14 @@ const FEB_28 = Date.UTC(2027, 1, 28, 12);
 const MAR_31 = Date.UTC(2027, 2, 31, 12);
 const APR_30 = Date.UTC(2027, 3, 30, 12);
 const TRIAL_DAYS = 14;
+
+interface JavaScriptCaller {
+  cancel(
+    id: string,
+    idempotencyKey: string,
+    timing: string,
+  ): Promise<Subscription>;
+}
 
 describe("[fallback] renewing on the clock", function () {
   this.timeout(SUITE_TIMEOUT);
@@ -312,5 +322,25 @@ describe("[fallback] cancelling", function () {
     );
     assert.equal(ended.endedAt, trialEnd);
     assert.equal(chargesMade(created.id).length, 0);
+  });
+
+  it("refuses a timing that is only an Object.prototype name", async () => {
+    const created = await subscribe(await newPayer());
+    const caller: JavaScriptCaller = { cancel: CancelSubscription };
+    for (const timing of [
+      "constructor",
+      "toString",
+      "valueOf",
+      "hasOwnProperty",
+      "__proto__",
+    ]) {
+      await assert.rejects(caller.cancel(created.id, key(), timing), {
+        name: InvalidSubscriptionRequestError.name,
+        message: `Unknown cancellation timing: ${timing}`,
+      });
+    }
+    const unchanged = await GetSubscription(created.id);
+    assert.equal(unchanged.status, "active");
+    assert.equal(unchanged.cancelAtPeriodEnd, false);
   });
 });

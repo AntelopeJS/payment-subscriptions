@@ -1,6 +1,6 @@
 import { equal, type Journey, type JourneyContext } from "@antelopejs/tooling-configs/verify";
 
-import { AMOUNT, SUCCEEDS, answer, create, post, prepare, startStack, type Stack } from "./stack.ts";
+import { AMOUNT, SUCCEEDS, answer, create, post, prepare, startStack, tuple, type Stack } from "./stack.ts";
 
 const ORDER_METADATA = { order: "A-1" };
 
@@ -30,8 +30,8 @@ export const chargeJourneys = {
         const charged = answer<ChargedPayment>(read).value;
         context.expect(read.folder, [
           equal("the provider holds the charge", answer(read).ok, true),
-          equal("it succeeded for the subscription's amount", [charged?.status, charged?.amount], ["succeeded", AMOUNT]),
-          equal("it charged the customer's saved method", [charged?.customer, charged?.paymentMethod], [prepared.customer, prepared.method]),
+          equal("it succeeded for the subscription's amount", tuple(charged?.status, charged?.amount), tuple("succeeded", AMOUNT)),
+          equal("it charged the customer's saved method", tuple(charged?.customer, charged?.paymentMethod), tuple(prepared.customer, prepared.method)),
           equal("it carries the subscription's reference", charged?.reference, "verify-order"),
           equal("it names the subscription and keeps the subscription's own metadata", charged?.metadata, { ...ORDER_METADATA, antelopeSubscription: sub.id }),
         ]);

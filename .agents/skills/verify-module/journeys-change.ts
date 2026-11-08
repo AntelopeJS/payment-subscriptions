@@ -10,6 +10,7 @@ import {
   sleep,
   startStack,
   stored,
+  tuple,
   type Sub,
 } from "./stack.ts";
 
@@ -28,13 +29,13 @@ export const changeJourneys = {
           equal("the status is canceled", after?.status, "canceled"),
           equal("the reason is requested", after?.endReason, "requested"),
           equal("it ended just now", after?.endedAt !== undefined && Math.abs(Date.now() - after.endedAt) < 60_000, true),
-          equal("the paid charge is unchanged", after?.latestPayment, sub.latestPayment),
+          equal("the paid charge is unchanged", after?.latestPayment ?? null, sub.latestPayment ?? null),
         ]);
         const doc = await stored(context, "MongoDB record after cancel", sub.id);
-        context.expect(doc.folder, [equal("the record is canceled with its reason", [doc.record?.status, doc.record?.endReason], ["canceled", "requested"])]);
+        context.expect(doc.folder, [equal("the record is canceled with its reason", tuple(doc.record?.status, doc.record?.endReason), tuple("canceled", "requested"))]);
         await sleep(600);
         const later = await call(context, stack, "GetSubscription after waiting", "GetSubscription", [sub.id]);
-        context.expect(later.folder, [equal("still canceled and not charged again", [answer<Sub>(later).value?.status, answer<Sub>(later).value?.latestPayment], ["canceled", sub.latestPayment])]);
+        context.expect(later.folder, [equal("still canceled and not charged again", tuple(answer<Sub>(later).value?.status, answer<Sub>(later).value?.latestPayment), tuple("canceled", sub.latestPayment))]);
         await context.stop("SIGINT", stack.app);
       },
     },
@@ -51,10 +52,10 @@ export const changeJourneys = {
           equal("the call succeeded", answer(flagged).ok, true),
           equal("the subscription is still active", after?.status, "active"),
           equal("it is flagged to end", after?.cancelAtPeriodEnd, true),
-          equal("it has not ended", after?.endedAt, undefined),
+          equal("it has not ended", after?.endedAt === undefined, true),
         ]);
         const doc = await stored(context, "MongoDB record after the flag", sub.id);
-        context.expect(doc.folder, [equal("the record is active and flagged", [doc.record?.status, doc.record?.cancelAtPeriodEnd], ["active", true])]);
+        context.expect(doc.folder, [equal("the record is active and flagged", tuple(doc.record?.status, doc.record?.cancelAtPeriodEnd), tuple("active", true))]);
         await context.stop("SIGINT", stack.app);
       },
     },
@@ -72,7 +73,7 @@ export const changeJourneys = {
         const first = await call(context, stack, "cancel now", "CancelSubscription", [sub.id, "k-first", "now"]);
         context.expect(first.folder, [equal("the first cancel succeeded", answer<Sub>(first).value?.status, "canceled")], { critical: true });
         const replay = await call(context, stack, "replay the same key", "CancelSubscription", [sub.id, "k-first", "now"]);
-        context.expect(replay.folder, [equal("the replay answers the canceled subscription", [answer(replay).ok, answer<Sub>(replay).value?.status], [true, "canceled"])]);
+        context.expect(replay.folder, [equal("the replay answers the canceled subscription", tuple(answer(replay).ok, answer<Sub>(replay).value?.status), tuple(true, "canceled"))]);
         const twice = await call(context, stack, "cancel again with a new key", "CancelSubscription", [sub.id, "k-second", "now"]);
         context.expect(twice.folder, [has("InvalidSubscriptionStateError says it has ended", failure(twice), /^InvalidSubscriptionStateError: Subscription sub_\w+ has ended/)]);
         await context.stop("SIGINT", stack.app);
@@ -88,7 +89,7 @@ export const changeJourneys = {
         context.expect(stack.app.folder, [equal("the customer has two different methods", second.method === prepared.method, false)]);
         const { sub } = await create(context, stack, { name: "create", prepared: prepared, key: "method-create" });
         const changed = await call(context, stack, "change the method", "UpdateSubscriptionPaymentMethod", [sub.id, second.method, "method-1"]);
-        context.expect(changed.folder, [equal("the new method is on the subscription", [answer(changed).ok, answer<Sub>(changed).value?.paymentMethod], [true, second.method])]);
+        context.expect(changed.folder, [equal("the new method is on the subscription", tuple(answer(changed).ok, answer<Sub>(changed).value?.paymentMethod), tuple(true, second.method))]);
         const doc = await stored(context, "MongoDB record after the change", sub.id);
         context.expect(doc.folder, [equal("the record holds the new method", doc.record?.paymentMethod, second.method)]);
         const replay = await call(context, stack, "replay the same key", "UpdateSubscriptionPaymentMethod", [sub.id, prepared.method, "method-1"]);

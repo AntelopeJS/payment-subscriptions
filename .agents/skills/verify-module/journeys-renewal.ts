@@ -20,6 +20,7 @@ import {
   sleep,
   startStack,
   stored,
+  tuple,
   waitFor,
   type Prepared,
   type Sub,
@@ -89,10 +90,10 @@ export const renewalJourneys = {
         context.expect(stack.app.folder, [
           equal("the trial turned active", active?.status, "active"),
           equal("the charge is recorded", active?.latestPayment !== undefined, true),
-          equal("the first period starts at the trial end", active?.currentPeriodStart, sub.trialEnd),
+          equal("the first period starts at the trial end", active?.currentPeriodStart ?? null, sub.trialEnd ?? null),
         ]);
         const doc = await stored(context, "MongoDB record after the charge", sub.id);
-        context.expect(doc.folder, [equal("the record is active and paid", [doc.record?.status, doc.record?.latestPayment], ["active", active?.latestPayment ?? null])]);
+        context.expect(doc.folder, [equal("the record is active and paid", tuple(doc.record?.status, doc.record?.latestPayment), tuple("active", active?.latestPayment ?? null))]);
         const seen = await eventsOf(context, stack, "events");
         context.expect(seen.folder, [equal("the charge was announced", seen.events.map((event) => event.type).includes("subscription.payment_succeeded"), true)]);
         await context.stop("SIGINT", stack.app);
@@ -108,9 +109,9 @@ export const renewalJourneys = {
         const late = await waitFor(context, stack, "wait for past_due", sub.id, "past_due");
         context.expect(stack.app.folder, [equal("the first decline makes it past_due", late?.status, "past_due")]);
         const ended = await waitFor(context, stack, "wait for canceled", sub.id, "canceled");
-        context.expect(stack.app.folder, [equal("after the retries it ends", [ended?.status, ended?.endReason], ["canceled", "payment_failed"])]);
+        context.expect(stack.app.folder, [equal("after the retries it ends", tuple(ended?.status, ended?.endReason), tuple("canceled", "payment_failed"))]);
         const doc = await stored(context, "MongoDB record after the end", sub.id);
-        context.expect(doc.folder, [equal("the record is canceled for payment_failed", [doc.record?.status, doc.record?.endReason], ["canceled", "payment_failed"])]);
+        context.expect(doc.folder, [equal("the record is canceled for payment_failed", tuple(doc.record?.status, doc.record?.endReason), tuple("canceled", "payment_failed"))]);
         const seen = await eventsOf(context, stack, "events");
         const types = seen.events.map((event) => event.type);
         context.expect(seen.folder, [
@@ -133,24 +134,24 @@ export const renewalJourneys = {
         const stopped = await context.stop("SIGINT", first.app);
         context.expect(stopped.folder, [exitIs(stopped, 130)]);
         const down = await stored(context, "MongoDB record while the module is down", sub.id);
-        context.expect(down.folder, [equal("the record waits in MongoDB", [down.record?.status, down.record?.latestPayment], ["trialing", null])], { critical: true });
+        context.expect(down.folder, [equal("the record waits in MongoDB", tuple(down.record?.status, down.record?.latestPayment), tuple("trialing", null))], { critical: true });
         const paid = await stored(context, "MongoDB charged record while the module is down", charged.sub.id);
-        context.expect(paid.folder, [equal("the charged record is live and keeps its payment", [paid.record?.phase, paid.record?.latestPayment === null], ["live", false])], { critical: true });
+        context.expect(paid.folder, [equal("the charged record is live and keeps its payment", tuple(paid.record?.phase, paid.record?.latestPayment === null), tuple("live", false))], { critical: true });
         const seeded = await mongosh(context, "mongosh inserts a creation left unfinished", `${collection()}.insertOne(${legacyCreating(customer)}).acknowledged`);
         context.expect(seeded.folder, [equal("mongosh stored the older record", seeded.stdout.trim(), "true")], { critical: true });
         const second = await launch(context, "second ajs project dev", prepared);
         const again = await prepare(context, second, SUCCEEDS);
         context.expect(second.app.folder, [equal("the in-memory test provider was refilled with the same ids", [again.customer, again.method], [customer.customer, customer.method])], { critical: true });
         const got = await call(context, second, "GetSubscription after restart", "GetSubscription", [sub.id]);
-        context.expect(got.folder, [equal("the same subscription is read back", [answer<Sub>(got).value?.id, answer<Sub>(got).value?.customer], [sub.id, customer.customer])]);
+        context.expect(got.folder, [equal("the same subscription is read back", tuple(answer<Sub>(got).value?.id, answer<Sub>(got).value?.customer), tuple(sub.id, customer.customer))]);
         const gotCharged = await call(context, second, "GetSubscription of the charged one", "GetSubscription", [charged.sub.id]);
-        context.expect(gotCharged.folder, [equal("the charged subscription is read back with its payment", [answer<Sub>(gotCharged).value?.id, answer<Sub>(gotCharged).value?.latestPayment], [charged.sub.id, charged.sub.latestPayment])]);
+        context.expect(gotCharged.folder, [equal("the charged subscription is read back with its payment", tuple(answer<Sub>(gotCharged).value?.id, answer<Sub>(gotCharged).value?.latestPayment), tuple(charged.sub.id, charged.sub.latestPayment))]);
         const resumed = await call(context, second, "replay the key of the unfinished creation", "CreateSubscription", [request(customer, { reference: "verify-legacy" }), LEGACY_KEY]);
-        context.expect(resumed.folder, [equal("the unfinished creation was completed", [answer<Sub>(resumed).ok, answer<Sub>(resumed).value?.id, answer<Sub>(resumed).value?.latestPayment !== undefined], [true, LEGACY_ID, true])]);
+        context.expect(resumed.folder, [equal("the unfinished creation was completed", tuple(answer<Sub>(resumed).ok, answer<Sub>(resumed).value?.id, answer<Sub>(resumed).value?.latestPayment !== undefined), tuple(true, LEGACY_ID, true))]);
         const finished = await stored(context, "MongoDB record of the completed creation", LEGACY_ID);
-        context.expect(finished.folder, [equal("it is live with its payment", [finished.record?.phase, finished.record?.latestPayment === null], ["live", false])]);
+        context.expect(finished.folder, [equal("it is live with its payment", tuple(finished.record?.phase, finished.record?.latestPayment === null), tuple("live", false))]);
         const active = await waitFor(context, second, "wait for active after restart", sub.id, "active");
-        context.expect(second.app.folder, [equal("the new process charged it", [active?.status, active?.latestPayment !== undefined], ["active", true])]);
+        context.expect(second.app.folder, [equal("the new process charged it", tuple(active?.status, active?.latestPayment !== undefined), tuple("active", true))]);
         const seen = await eventsOf(context, second, "events after restart");
         context.expect(seen.folder, [equal("the new process announced the charge", seen.events.map((event) => event.type).includes("subscription.payment_succeeded"), true)]);
         await context.stop("SIGINT", second.app);
@@ -187,7 +188,7 @@ export const renewalJourneys = {
         const stack = await startStack(context, "ajs project dev");
         const prepared = await prepare(context, stack, SUCCEEDS);
         const before = await eventsOf(context, stack, "events before anything");
-        context.expect(before.folder, [equal("no event yet", before.events, [])], { critical: true });
+        context.expect(before.folder, [equal("no event yet", before.events.length, 0)], { critical: true });
         const { sub } = await create(context, stack, { name: "create", prepared: prepared, key: "events-create" });
         const canceled = await call(context, stack, "cancel now", "CancelSubscription", [sub.id, "events-cancel", "now"]);
         context.expect(canceled.folder, [equal("canceled", answer<Sub>(canceled).value?.status, "canceled")], { critical: true });
@@ -198,11 +199,11 @@ export const renewalJourneys = {
         context.expect(seen.folder, [
           equal("created, paid, canceled", types, ["subscription.created", "subscription.payment_succeeded", "subscription.canceled"]),
           equal("every event carries its subscription", seen.events.every((event) => event.subscription.id === sub.id), true),
-          equal("the payment event names the charge", paid?.payment, sub.latestPayment),
+          equal("the payment event names the charge", paid?.payment ?? null, sub.latestPayment ?? null),
           equal("the event ids are unique", new Set(seen.events.map((event) => event.id)).size, 3),
         ]);
         const doc = await stored(context, "MongoDB record outbox", sub.id);
-        context.expect(doc.folder, [equal("every event was delivered: the outbox is empty", doc.record?.outbox, [])]);
+        context.expect(doc.folder, [equal("every event was delivered: the outbox is empty", doc.record?.outbox?.length, 0)]);
         await context.stop("SIGINT", stack.app);
       },
     },
@@ -214,7 +215,7 @@ export const renewalJourneys = {
         const prepared = await prepare(context, stack, DECLINES);
         const { sub } = await create(context, stack, { name: "create with a 1.5 s trial", prepared: prepared, key: "policy-create", overrides: { trialEnd: Date.now() + 1500 } });
         const ended = await waitFor(context, stack, "wait for canceled", sub.id, "canceled");
-        context.expect(stack.app.folder, [equal("the first decline ends it", [ended?.status, ended?.endReason], ["canceled", "payment_failed"])]);
+        context.expect(stack.app.folder, [equal("the first decline ends it", tuple(ended?.status, ended?.endReason), tuple("canceled", "payment_failed"))]);
         const seen = await eventsOf(context, stack, "events");
         const types = seen.events.map((event) => event.type);
         context.expect(seen.folder, [equal("one decline, then the end", types.filter((type) => type !== "subscription.created"), ["subscription.payment_failed", "subscription.canceled"])]);

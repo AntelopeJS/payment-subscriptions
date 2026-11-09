@@ -9,17 +9,17 @@ importers:
   .:
     dependencies:
       '@antelopejs/interface-core':
-        specifier: '>=0.0.5 <1.0.0'
-        version: 0.3.0
+        specifier: '>=0.2.4 <1.0.0'
+        version: 0.4.0
       '@antelopejs/interface-database':
         specifier: '>=0.2.0 <1.0.0'
-        version: 0.2.0(@antelopejs/interface-core@0.3.0)
+        version: 0.2.0(@antelopejs/interface-core@0.4.0)
       '@antelopejs/interface-payment':
         specifier: '>=0.0.2 <1.0.0'
-        version: 0.0.2(@antelopejs/interface-core@0.3.0)
+        version: 0.0.2(@antelopejs/interface-core@0.4.0)
       '@antelopejs/interface-subscriptions':
         specifier: '>=0.1.0 <0.2.0'
-        version: 0.1.0(@antelopejs/interface-core@0.3.0)(@antelopejs/interface-payment@0.0.2(@antelopejs/interface-core@0.3.0))
+        version: 0.1.0(@antelopejs/interface-core@0.4.0)(@antelopejs/interface-payment@0.0.2(@antelopejs/interface-core@0.4.0))
     devDependencies:
       '@antelopejs/core':
         specifier: 1.21.0
@@ -77,11 +77,11 @@ importers:
         version: 5.9.3
     optionalDependencies:
       '@antelopejs/interface-redis':
-        specifier: '>=0.0.6 <1.0.0'
-        version: 0.0.8(@antelopejs/interface-core@0.3.0)
+        specifier: '>=0.0.9 <1.0.0'
+        version: 0.0.9(@antelopejs/interface-core@0.4.0)
       '@antelopejs/interface-redis-scheduler':
         specifier: '>=0.0.9 <1.0.0'
-        version: 0.0.9(@antelopejs/interface-core@0.3.0)(@antelopejs/interface-redis@0.0.8(@antelopejs/interface-core@0.3.0))
+        version: 0.0.9(@antelopejs/interface-core@0.4.0)(@antelopejs/interface-redis@0.0.9(@antelopejs/interface-core@0.4.0))
 
 packages:
 
@@ -89,9 +89,6 @@ packages:
     resolution: {integrity: sha512-0+qxASgc1sF8MihvGYfrAy6m3XTPcrFJeeIH69ivI0cvtYmj71cjzTeXdKghBZb4ndTMQ2IXeKbK6zxrG2w4Tw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
-
-  '@antelopejs/interface-core@0.3.0':
-    resolution: {integrity: sha512-GeGclCe5JOg+9H7XvTxYmE78u9tHG7QpVddHkB11kSgjNKq1hXqbEXPv0BRKQD9jjiV594qr1HuFuuYp4aqCZQ==}
 
   '@antelopejs/interface-core@0.4.0':
     resolution: {integrity: sha512-IPX6dtt3KHknclN4mLOYeRYL2Odz1Pts+dtaZul62NghsBUX/0OFHD4Qhoaf+Beva4hjInbaF918ajr4Z5HVWQ==}
@@ -120,10 +117,10 @@ packages:
       '@antelopejs/interface-core': '>=0.2.4 <1.0.0'
       '@antelopejs/interface-redis': '>=0.0.9 <1.0.0'
 
-  '@antelopejs/interface-redis@0.0.8':
-    resolution: {integrity: sha512-f7pAEpZG50mw12opT80DPL0wLtFmIfuhPJHDuRHDD3kg7PeAqiMWb1AQH3nwRn/+lxtB5/2zdLGWrzZ8y4xRdw==}
+  '@antelopejs/interface-redis@0.0.9':
+    resolution: {integrity: sha512-lI1zcm2J13tP4D/QKmsdKFBRIzjZ/GdG4z27uaOp/3yKPA3RkH5YgpzFm9pgBa353UIhgZDuVkozFJcFkqewUA==}
     peerDependencies:
-      '@antelopejs/interface-core': '>=0.0.3 <1.0.0'
+      '@antelopejs/interface-core': '>=0.2.4 <1.0.0'
 
   '@antelopejs/interface-subscriptions@0.1.0':
     resolution: {integrity: sha512-FFFZrg5eG6Gflv77Dw1LU696uVC6gyJC11FnjPv1y4GU9fXLLe4MBFP0I83hJKHN1jq+ytBdAxSAa7B/aV4ptQ==}
@@ -2892,21 +2889,17 @@ snapshots:
       semver: 7.8.5
       typescript: 5.9.3
 
-  '@antelopejs/interface-core@0.3.0':
-    dependencies:
-      reflect-metadata: 0.2.2
-
   '@antelopejs/interface-core@0.4.0':
     dependencies:
       reflect-metadata: 0.2.2
 
-  '@antelopejs/interface-database-catalog@0.0.3(@antelopejs/interface-core@0.3.0)':
+  '@antelopejs/interface-database-catalog@0.0.3(@antelopejs/interface-core@0.4.0)':
     dependencies:
-      '@antelopejs/interface-core': 0.3.0
+      '@antelopejs/interface-core': 0.4.0
 
-  '@antelopejs/interface-database@0.2.0(@antelopejs/interface-core@0.3.0)':
+  '@antelopejs/interface-database@0.2.0(@antelopejs/interface-core@0.4.0)':
     dependencies:
-      '@antelopejs/interface-core': 0.3.0
+      '@antelopejs/interface-core': 0.4.0
 
   '@antelopejs/interface-mongodb@0.0.6(socks@2.8.10)':
     dependencies:
@@ -2921,35 +2914,35 @@ snapshots:
       - socks
     optional: true
 
-  '@antelopejs/interface-payment@0.0.2(@antelopejs/interface-core@0.3.0)':
+  '@antelopejs/interface-payment@0.0.2(@antelopejs/interface-core@0.4.0)':
     dependencies:
-      '@antelopejs/interface-core': 0.3.0
+      '@antelopejs/interface-core': 0.4.0
 
-  '@antelopejs/interface-redis-scheduler@0.0.9(@antelopejs/interface-core@0.3.0)(@antelopejs/interface-redis@0.0.8(@antelopejs/interface-core@0.3.0))':
+  '@antelopejs/interface-redis-scheduler@0.0.9(@antelopejs/interface-core@0.4.0)(@antelopejs/interface-redis@0.0.9(@antelopejs/interface-core@0.4.0))':
     dependencies:
-      '@antelopejs/interface-core': 0.3.0
-      '@antelopejs/interface-redis': 0.0.8(@antelopejs/interface-core@0.3.0)
+      '@antelopejs/interface-core': 0.4.0
+      '@antelopejs/interface-redis': 0.0.9(@antelopejs/interface-core@0.4.0)
       ioredis: 5.11.1
     transitivePeerDependencies:
       - supports-color
 
-  '@antelopejs/interface-redis@0.0.8(@antelopejs/interface-core@0.3.0)':
+  '@antelopejs/interface-redis@0.0.9(@antelopejs/interface-core@0.4.0)':
     dependencies:
-      '@antelopejs/interface-core': 0.3.0
+      '@antelopejs/interface-core': 0.4.0
       ioredis: 5.11.1
     transitivePeerDependencies:
       - supports-color
 
-  '@antelopejs/interface-subscriptions@0.1.0(@antelopejs/interface-core@0.3.0)(@antelopejs/interface-payment@0.0.2(@antelopejs/interface-core@0.3.0))':
+  '@antelopejs/interface-subscriptions@0.1.0(@antelopejs/interface-core@0.4.0)(@antelopejs/interface-payment@0.0.2(@antelopejs/interface-core@0.4.0))':
     dependencies:
-      '@antelopejs/interface-core': 0.3.0
-      '@antelopejs/interface-payment': 0.0.2(@antelopejs/interface-core@0.3.0)
+      '@antelopejs/interface-core': 0.4.0
+      '@antelopejs/interface-payment': 0.0.2(@antelopejs/interface-core@0.4.0)
 
   '@antelopejs/mongodb@1.6.0(socks@2.8.10)':
     dependencies:
-      '@antelopejs/interface-core': 0.3.0
-      '@antelopejs/interface-database': 0.2.0(@antelopejs/interface-core@0.3.0)
-      '@antelopejs/interface-database-catalog': 0.0.3(@antelopejs/interface-core@0.3.0)
+      '@antelopejs/interface-core': 0.4.0
+      '@antelopejs/interface-database': 0.2.0(@antelopejs/interface-core@0.4.0)
+      '@antelopejs/interface-database-catalog': 0.0.3(@antelopejs/interface-core@0.4.0)
       chai: 4.5.0
       mongodb: 6.21.0(socks@2.8.10)
       randomstring: 1.3.2
@@ -2968,9 +2961,9 @@ snapshots:
 
   '@antelopejs/redis@1.0.3(@types/ioredis-mock@8.2.8(ioredis@5.11.1))':
     dependencies:
-      '@antelopejs/interface-core': 0.3.0
-      '@antelopejs/interface-redis': 0.0.8(@antelopejs/interface-core@0.3.0)
-      '@antelopejs/interface-redis-scheduler': 0.0.9(@antelopejs/interface-core@0.3.0)(@antelopejs/interface-redis@0.0.8(@antelopejs/interface-core@0.3.0))
+      '@antelopejs/interface-core': 0.4.0
+      '@antelopejs/interface-redis': 0.0.9(@antelopejs/interface-core@0.4.0)
+      '@antelopejs/interface-redis-scheduler': 0.0.9(@antelopejs/interface-core@0.4.0)(@antelopejs/interface-redis@0.0.9(@antelopejs/interface-core@0.4.0))
       ioredis: 5.11.1
       ioredis-mock: 8.13.1(@types/ioredis-mock@8.2.8(ioredis@5.11.1))(ioredis@5.11.1)
     transitivePeerDependencies:

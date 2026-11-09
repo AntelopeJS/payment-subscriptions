@@ -309,11 +309,11 @@ async function CancelSubscription(
   timing: CancellationTiming,
   provider?: string,
 ): Promise<Subscription> {
-  const cancel = CANCELLATIONS[timing];
-  if (!cancel)
+  if (!Object.prototype.hasOwnProperty.call(CANCELLATIONS, timing))
     throw new InvalidSubscriptionRequestError(
       `Unknown cancellation timing: ${timing}`,
     );
+  const cancel = CANCELLATIONS[timing];
   const canceled = await changeLive(
     id,
     idempotencyKey,

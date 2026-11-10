@@ -8,4 +8,5 @@ export default antelopeKnipConfig({
     "test/boot-probe/index.js",
   ],
   ignoreBinaries: ["ajs"],
+  ignoreDependencies: ["@types/tmp"],
 });

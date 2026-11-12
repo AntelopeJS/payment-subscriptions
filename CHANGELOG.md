@@ -1,5 +1,39 @@
 # Changelog
 
+## v0.0.5
+
+[compare changes](https://github.com/AntelopeJS/payment-subscriptions/compare/v0.0.4...v0.0.5)
+
+### 🩹 Fixes
+
+- **verify:** Cover the files every journey loads ([#39](https://github.com/AntelopeJS/payment-subscriptions/pull/39))
+- **cancel:** Reject Object.prototype names as the cancellation timing ([#41](https://github.com/AntelopeJS/payment-subscriptions/pull/41))
+
+### 📦 Build
+
+- **deps:** Bump @antelopejs packages to the 2026-11-06 releases ([#35](https://github.com/AntelopeJS/payment-subscriptions/pull/35))
+- **deps:** Bump @antelopejs/tooling-configs to 0.3.4 ([#36](https://github.com/AntelopeJS/payment-subscriptions/pull/36))
+- **deps:** Bump @antelopejs/tooling-configs to 0.4.0 ([#42](https://github.com/AntelopeJS/payment-subscriptions/pull/42))
+- **deps:** Wire the interface-ranges lint and align interface floors ([#40](https://github.com/AntelopeJS/payment-subscriptions/pull/40))
+- **deps:** Bump @antelopejs/tooling-configs to 0.5.0 ([#43](https://github.com/AntelopeJS/payment-subscriptions/pull/43))
+- **deps:** Bump @antelopejs/tooling-configs to 0.5.1 ([#44](https://github.com/AntelopeJS/payment-subscriptions/pull/44))
+
+### 🏡 Chore
+
+- Land the cleanup campaign on main ([#31](https://github.com/AntelopeJS/payment-subscriptions/pull/31))
+- **verify:** Remove seeded runs from the verification skill ([#32](https://github.com/AntelopeJS/payment-subscriptions/pull/32))
+- **ci:** Remove the weekly mutation caller ([#33](https://github.com/AntelopeJS/payment-subscriptions/pull/33))
+
+### 🤖 CI
+
+- Call ci-node.yml@v1 ([#34](https://github.com/AntelopeJS/payment-subscriptions/pull/34))
+- Cache the compiled Redis test binary ([#37](https://github.com/AntelopeJS/payment-subscriptions/pull/37))
+- Persist formal-check results between runs ([#38](https://github.com/AntelopeJS/payment-subscriptions/pull/38))
+
+### ❤️ Contributors
+
+- Antony Rizzitelli ([@Upd4ting](http://github.com/Upd4ting))
+
 ## v0.0.4
 
 [compare changes](https://github.com/AntelopeJS/payment-subscriptions/compare/v0.0.3...v0.0.4)

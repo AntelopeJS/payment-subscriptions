@@ -29,12 +29,6 @@ const PAYMENT_ENV = {
 
 let mongod: MongoMemoryServer | undefined;
 let redis: RedisMemoryServer | undefined;
-const EXIT_GRACE_MS = 2_000;
-
-function exitOnceSchedulerTimerIsAllThatIsLeft(): void {
-  if (CLOCK !== "redis") return;
-  setTimeout(() => process.exit(process.exitCode), EXIT_GRACE_MS).unref();
-}
 
 async function redisModules(): Promise<Record<string, AntelopeModuleConfig>> {
   if (CLOCK !== "redis") return {};
@@ -95,7 +89,6 @@ export default defineConfig({
     async cleanup() {
       await redis?.stop();
       await mongod?.stop();
-      exitOnceSchedulerTimerIsAllThatIsLeft();
     },
   },
 });

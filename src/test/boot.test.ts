@@ -2,6 +2,7 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import assert from "node:assert/strict";
 import { type ChildProcess, spawn } from "node:child_process";
+import { once } from "node:events";
 import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 
 import { CLOCK_UNDER_TEST } from "./support";
@@ -63,6 +64,13 @@ function launch(folder: string): ChildProcess {
   });
 }
 
+async function stop(child: ChildProcess): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  const exited = once(child, "exit");
+  child.kill("SIGKILL");
+  await exited;
+}
+
 function milestones(child: ChildProcess): Promise<string> {
   let output = "";
   return new Promise((resolve) => {
@@ -101,7 +109,7 @@ describe("[fallback] booting outside the test harness", function () {
         );
       }
     } finally {
-      child.kill("SIGKILL");
+      await stop(child);
       rmSync(folder, { recursive: true, force: true });
     }
   });

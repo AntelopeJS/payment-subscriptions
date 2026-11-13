@@ -21,6 +21,7 @@ jobs:
       cache-key-files: src/test/antelope.test.ts
       renovate-sync: false
       test-job: true
+      windows: true
     permissions:
       contents: read
 

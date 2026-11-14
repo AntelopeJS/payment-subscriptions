@@ -5,8 +5,8 @@
   "description": "A consumer module for payment-subscriptions' boot test: subscribes with a short trial and reports whether it renewed. Never published.",
   "main": "index.js",
   "dependencies": {
-    "@antelopejs/interface-payment": ">=0.0.2 <1.0.0",
-    "@antelopejs/interface-subscriptions": ">=0.1.0 <1.0.0"
+    "@antelopejs/interface-payment": ">=0.2.1 <0.3.0",
+    "@antelopejs/interface-subscriptions": ">=0.1.2 <0.2.0"
   },
   "antelopeJs": {
     "defaultConfig": {}

@@ -90,14 +90,14 @@ export function NewRevision(): string {
 export async function LoadRecord(
   id: string,
 ): Promise<SubscriptionRecord | undefined> {
-  return (await table().get(id)) ?? undefined;
+  return (await table().get(id).run()) ?? undefined;
 }
 
 export async function InsertRecord(
   record: SubscriptionRecord,
 ): Promise<boolean> {
   try {
-    await table().insert(record);
+    await table().insert(record).run();
     return true;
   } catch (error) {
     if (await LoadRecord(record._id)) return false;
@@ -110,13 +110,15 @@ export async function MutateRecord(
   patch: RecordPatch,
 ): Promise<SubscriptionRecord | undefined> {
   const nextRevision = NewRevision();
-  const outcome = await table().atomicMutation(record._id, {
-    type: "update",
-    revisionField: "revision",
-    expectedRevision: record.revision,
-    nextRevision,
-    patch,
-  });
+  const outcome = await table()
+    .atomicMutation(record._id, {
+      type: "update",
+      revisionField: "revision",
+      expectedRevision: record.revision,
+      nextRevision,
+      patch,
+    })
+    .run();
   if (outcome !== "applied") return undefined;
   return { ...record, ...patch, revision: nextRevision };
 }
@@ -130,7 +132,8 @@ export async function DueRecordIds(
       record.key("dueAt").ne(NOT_DUE).and(record.key("dueAt").le(now)),
     )
     .orderBy("dueAt", "asc")
-    .slice(0, limit);
+    .slice(0, limit)
+    .run();
   return due.map((record) => record._id);
 }
 
@@ -146,5 +149,6 @@ export async function CustomerRecords(
         .and(record.key("provider").eq(provider))
         .and(record.key("phase").eq("live")),
     )
-    .orderBy("createdOrder", "desc");
+    .orderBy("createdOrder", "desc")
+    .run();
 }

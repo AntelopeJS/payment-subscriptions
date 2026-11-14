@@ -129,7 +129,6 @@ describe("[fallback] instances that fall behind", function () {
 
   it("ignores an outcome that arrives after another instance has moved the renewal on", async () => {
     const created = await subscribe(await newPayer());
-    await Runtime().engine.drain();
 
     await withTriggerStopped(async () => {
       clock.advanceTo(MONTH_LATER);
@@ -161,7 +160,6 @@ describe("[fallback] instances that fall behind", function () {
 
   it("renews from the database alone, with no trigger and nothing in memory", async () => {
     const created = await subscribe(await newPayer());
-    await Runtime().engine.drain();
 
     await withTriggerStopped(async () => {
       clock.advanceTo(MONTH_LATER);

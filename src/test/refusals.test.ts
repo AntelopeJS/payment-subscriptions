@@ -120,7 +120,6 @@ describe("[fallback] a charge in doubt", function () {
 
   it("is not retried once the subscription has been cancelled", async () => {
     const created = await subscribe(await newPayer());
-    await Runtime().engine.drain();
 
     await withTriggerStopped(async () => {
       clock.advanceTo(MONTH_LATER);
@@ -191,7 +190,6 @@ describe("[fallback] a subscription that keeps failing to process", function () 
     const stuck = await subscribe(await newPayer());
     clock.advance(DAY_MS);
     const healthy = await subscribe(await newPayer());
-    await Runtime().engine.drain();
 
     const { settings, schedule } = Runtime();
     const broken: ProviderSchedule = {

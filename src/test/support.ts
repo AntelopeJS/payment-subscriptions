@@ -175,12 +175,24 @@ function monthly(
   };
 }
 
+/**
+ * Creates a monthly subscription and waits for the engine work in flight, so
+ * the creation lease is released before a test moves the clock. A clock move
+ * past a live lease lets another process claim the record and deliver its
+ * outbox a second time.
+ */
 export async function subscribe(
   payer: Payer,
   overrides: Partial<SubscriptionRequest> = {},
   account?: string,
 ): Promise<Subscription> {
-  return CreateSubscription(monthly(payer, overrides), key(), account);
+  const created = await CreateSubscription(
+    monthly(payer, overrides),
+    key(),
+    account,
+  );
+  await Runtime().engine.drain();
+  return created;
 }
 
 export function recordEvents(): SubscriptionEvent[] {

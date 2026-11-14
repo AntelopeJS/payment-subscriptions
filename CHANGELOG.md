@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.0.6
+
+[compare changes](https://github.com/AntelopeJS/payment-subscriptions/compare/v0.0.5...v0.0.6)
+
+### 📖 Documentation
+
+- **readme:** Adopt the AntelopeJS framework README style ([#45](https://github.com/AntelopeJS/payment-subscriptions/pull/45))
+- **agents:** Name the pinned core 1.21.0 and recheck its exit hang ([#46](https://github.com/AntelopeJS/payment-subscriptions/pull/46))
+- **readme:** Use ~ ranges on the newest stripe and mongodb minors ([#51](https://github.com/AntelopeJS/payment-subscriptions/pull/51))
+
+### 📦 Build
+
+- **deps:** Require interface-redis-scheduler 0.0.12 and drop the test exit workaround ([#48](https://github.com/AntelopeJS/payment-subscriptions/pull/48))
+- **deps:** ⚠️  Cap @antelopejs ranges on the newest published minors ([#50](https://github.com/AntelopeJS/payment-subscriptions/pull/50))
+
+### ✅ Tests
+
+- Deliver a new subscription's events before the clock moves ([#49](https://github.com/AntelopeJS/payment-subscriptions/pull/49))
+
+### 🤖 CI
+
+- Run the checks and tests on Windows beside Linux ([#47](https://github.com/AntelopeJS/payment-subscriptions/pull/47))
+
+#### ⚠️ Breaking Changes
+
+- **deps:** ⚠️  Cap @antelopejs ranges on the newest published minors ([#50](https://github.com/AntelopeJS/payment-subscriptions/pull/50))
+
+### ❤️ Contributors
+
+- Antony Rizzitelli ([@Upd4ting](http://github.com/Upd4ting))
+
 ## v0.0.5
 
 [compare changes](https://github.com/AntelopeJS/payment-subscriptions/compare/v0.0.4...v0.0.5)

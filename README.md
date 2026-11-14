@@ -50,7 +50,7 @@ export default defineConfig({
       source: {
         type: "package",
         package: "@antelopejs/payment-subscriptions",
-        version: "^0.0.3",
+        version: ">=0.0.5 <0.1.0",
       },
     },
     stripe: {
@@ -162,12 +162,12 @@ version that `devDependencies` pins.
 
 | Package                                 | Supported         | Tested with |
 | --------------------------------------- | ----------------- | ----------- |
-| `@antelopejs/interface-core`            | `>=0.2.4 <1.0.0`  | `0.4.0`     |
-| `@antelopejs/interface-database`        | `>=0.2.0 <1.0.0`  | `0.2.0`     |
-| `@antelopejs/interface-payment`         | `>=0.0.2 <1.0.0`  | `0.0.2`     |
-| `@antelopejs/interface-redis`           | `>=0.0.9 <1.0.0`  | `0.0.9`     |
-| `@antelopejs/interface-redis-scheduler` | `>=0.0.12 <1.0.0` | `0.0.12`    |
-| `@antelopejs/interface-subscriptions`   | `>=0.1.0 <0.2.0`  | `0.1.0`     |
+| `@antelopejs/interface-core`            | `>=0.5.1 <0.6.0`  | `0.5.1`     |
+| `@antelopejs/interface-database`        | `>=0.4.0 <0.5.0`  | `0.4.0`     |
+| `@antelopejs/interface-payment`         | `>=0.2.1 <0.3.0`  | `0.2.1`     |
+| `@antelopejs/interface-redis`           | `>=0.0.10 <0.1.0` | `0.0.10`    |
+| `@antelopejs/interface-redis-scheduler` | `>=0.0.12 <0.1.0` | `0.0.12`    |
+| `@antelopejs/interface-subscriptions`   | `>=0.1.2 <0.2.0`  | `0.1.2`     |
 
 <!-- antelopejs-docs-compat:end -->
 

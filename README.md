@@ -57,7 +57,7 @@ export default defineConfig({
       source: {
         type: "package",
         package: "@antelopejs/stripe",
-        version: "^1.1.0",
+        version: "~1.2.2",
       },
       disabledExports: ["@antelopejs/interface-subscriptions"],
       config: { apiKey: "REPLACE_VIA_ENV", webhookSecret: "REPLACE_VIA_ENV" },
@@ -66,7 +66,7 @@ export default defineConfig({
       source: {
         type: "package",
         package: "@antelopejs/mongodb",
-        version: "^1.6.0",
+        version: "~1.8.0",
       },
       config: { url: "REPLACE_VIA_ENV", database: "billing" },
     },

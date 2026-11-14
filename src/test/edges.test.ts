@@ -38,7 +38,6 @@ describe("[fallback] cancelling while money is moving", function () {
 
   it("records and reports a charge that lands after a cancellation", async () => {
     const created = await subscribe(await newPayer());
-    await Runtime().engine.drain();
 
     await withTriggerStopped(async () => {
       clock.advanceTo(MONTH_LATER);

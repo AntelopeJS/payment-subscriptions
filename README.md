@@ -160,14 +160,14 @@ version that `devDependencies` pins.
 
 <!-- antelopejs-docs-compat:start -->
 
-| Package                                 | Supported        | Tested with |
-| --------------------------------------- | ---------------- | ----------- |
-| `@antelopejs/interface-core`            | `>=0.2.4 <1.0.0` | `0.4.0`     |
-| `@antelopejs/interface-database`        | `>=0.2.0 <1.0.0` | `0.2.0`     |
-| `@antelopejs/interface-payment`         | `>=0.0.2 <1.0.0` | `0.0.2`     |
-| `@antelopejs/interface-redis`           | `>=0.0.9 <1.0.0` | `0.0.9`     |
-| `@antelopejs/interface-redis-scheduler` | `>=0.0.9 <1.0.0` | `0.0.9`     |
-| `@antelopejs/interface-subscriptions`   | `>=0.1.0 <0.2.0` | `0.1.0`     |
+| Package                                 | Supported         | Tested with |
+| --------------------------------------- | ----------------- | ----------- |
+| `@antelopejs/interface-core`            | `>=0.2.4 <1.0.0`  | `0.4.0`     |
+| `@antelopejs/interface-database`        | `>=0.2.0 <1.0.0`  | `0.2.0`     |
+| `@antelopejs/interface-payment`         | `>=0.0.2 <1.0.0`  | `0.0.2`     |
+| `@antelopejs/interface-redis`           | `>=0.0.9 <1.0.0`  | `0.0.9`     |
+| `@antelopejs/interface-redis-scheduler` | `>=0.0.12 <1.0.0` | `0.0.12`    |
+| `@antelopejs/interface-subscriptions`   | `>=0.1.0 <0.2.0`  | `0.1.0`     |
 
 <!-- antelopejs-docs-compat:end -->
 

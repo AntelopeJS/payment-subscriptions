@@ -86,8 +86,8 @@ importers:
         specifier: '>=0.0.9 <1.0.0'
         version: 0.0.9(@antelopejs/interface-core@0.4.0)
       '@antelopejs/interface-redis-scheduler':
-        specifier: '>=0.0.9 <1.0.0'
-        version: 0.0.9(@antelopejs/interface-core@0.4.0)(@antelopejs/interface-redis@0.0.9(@antelopejs/interface-core@0.4.0))
+        specifier: '>=0.0.12 <1.0.0'
+        version: 0.0.12(@antelopejs/interface-core@0.4.0)(@antelopejs/interface-redis@0.0.9(@antelopejs/interface-core@0.4.0))
 
 packages:
 
@@ -117,8 +117,8 @@ packages:
     peerDependencies:
       '@antelopejs/interface-core': '>=0.0.3 <1.0.0'
 
-  '@antelopejs/interface-redis-scheduler@0.0.9':
-    resolution: {integrity: sha512-cjMgKmJFrjzo0ZcA+08tiPH+KrAWRJQr2f+k51srbf7pApPcPgW7y96N53OKdxadD9FZw+UxYJIJcFM1nw8CBw==}
+  '@antelopejs/interface-redis-scheduler@0.0.12':
+    resolution: {integrity: sha512-c+KL+5vV/xAP8echDBDMqX8p+6QIvJhQNDgWAz9lnvAJK5XpXX7LwcIQcP6rqwiZENcELDlquKsT5UKaIdXL0w==}
     peerDependencies:
       '@antelopejs/interface-core': '>=0.2.4 <1.0.0'
       '@antelopejs/interface-redis': '>=0.0.9 <1.0.0'
@@ -2930,7 +2930,7 @@ snapshots:
     dependencies:
       '@antelopejs/interface-core': 0.4.0
 
-  '@antelopejs/interface-redis-scheduler@0.0.9(@antelopejs/interface-core@0.4.0)(@antelopejs/interface-redis@0.0.9(@antelopejs/interface-core@0.4.0))':
+  '@antelopejs/interface-redis-scheduler@0.0.12(@antelopejs/interface-core@0.4.0)(@antelopejs/interface-redis@0.0.9(@antelopejs/interface-core@0.4.0))':
     dependencies:
       '@antelopejs/interface-core': 0.4.0
       '@antelopejs/interface-redis': 0.0.9(@antelopejs/interface-core@0.4.0)
@@ -2975,7 +2975,7 @@ snapshots:
     dependencies:
       '@antelopejs/interface-core': 0.4.0
       '@antelopejs/interface-redis': 0.0.9(@antelopejs/interface-core@0.4.0)
-      '@antelopejs/interface-redis-scheduler': 0.0.9(@antelopejs/interface-core@0.4.0)(@antelopejs/interface-redis@0.0.9(@antelopejs/interface-core@0.4.0))
+      '@antelopejs/interface-redis-scheduler': 0.0.12(@antelopejs/interface-core@0.4.0)(@antelopejs/interface-redis@0.0.9(@antelopejs/interface-core@0.4.0))
       ioredis: 5.11.1
       ioredis-mock: 8.13.1(@types/ioredis-mock@8.2.8(ioredis@5.11.1))(ioredis@5.11.1)
     transitivePeerDependencies:

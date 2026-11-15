@@ -66,7 +66,7 @@ export default defineConfig({
       source: {
         type: "package",
         package: "@antelopejs/mongodb",
-        version: "~1.8.0",
+        version: "~1.8.4",
       },
       config: { url: "REPLACE_VIA_ENV", database: "billing" },
     },
@@ -163,7 +163,7 @@ version that `devDependencies` pins.
 | Package                                 | Supported         | Tested with |
 | --------------------------------------- | ----------------- | ----------- |
 | `@antelopejs/interface-core`            | `>=0.5.1 <0.6.0`  | `0.5.1`     |
-| `@antelopejs/interface-database`        | `>=0.4.0 <0.5.0`  | `0.4.0`     |
+| `@antelopejs/interface-database`        | `>=0.4.0 <0.5.0`  | `0.4.1`     |
 | `@antelopejs/interface-payment`         | `>=0.2.1 <0.3.0`  | `0.2.1`     |
 | `@antelopejs/interface-redis`           | `>=0.0.10 <0.1.0` | `0.0.10`    |
 | `@antelopejs/interface-redis-scheduler` | `>=0.0.12 <0.1.0` | `0.0.12`    |

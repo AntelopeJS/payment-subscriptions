@@ -10,7 +10,7 @@ The AntelopeJS module `@antelopejs/payment-subscriptions`. It implements `@antel
 
 ## Versioning
 
-The interface packages are `dependencies` with ranges, and `@antelopejs/interface-redis` and `@antelopejs/interface-redis-scheduler` are `optionalDependencies`, so the module starts without Redis. The README compatibility table mirrors both blocks (`docs-compat` markers); change it with the ranges. `@antelopejs/core` is `~1.23.0`: the suite verifies Redis routing under that version. Recheck it when you bump it.
+The interface packages are `dependencies` with ranges, and `@antelopejs/interface-redis` and `@antelopejs/interface-redis-scheduler` are `optionalDependencies`, so the module starts without Redis. The README compatibility table mirrors both blocks (`docs-compat` markers); change it with the ranges. `@antelopejs/core` is `~1.24.0`: the suite verifies Redis routing under that version. Recheck it when you bump it.
 
 ## Tests
 

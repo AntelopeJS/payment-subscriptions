@@ -13,7 +13,7 @@ importers:
         version: 0.5.1
       '@antelopejs/interface-database':
         specifier: '>=0.4.0 <0.5.0'
-        version: 0.4.0(@antelopejs/interface-core@0.5.1)
+        version: 0.4.1(@antelopejs/interface-core@0.5.1)
       '@antelopejs/interface-payment':
         specifier: '>=0.2.1 <0.3.0'
         version: 0.2.1(@antelopejs/interface-core@0.5.1)
@@ -22,11 +22,11 @@ importers:
         version: 0.1.2(@antelopejs/interface-core@0.5.1)(@antelopejs/interface-payment@0.2.1(@antelopejs/interface-core@0.5.1))
     devDependencies:
       '@antelopejs/core':
-        specifier: ~1.23.0
-        version: 1.23.0
+        specifier: ~1.24.0
+        version: 1.24.0
       '@antelopejs/mongodb':
-        specifier: ~1.8.0
-        version: 1.8.0(socks@2.8.10)
+        specifier: ~1.8.4
+        version: 1.8.4(socks@2.8.10)
       '@antelopejs/redis':
         specifier: ~1.1.1
         version: 1.1.1(@types/ioredis-mock@8.2.8(ioredis@5.11.1))
@@ -91,23 +91,23 @@ importers:
 
 packages:
 
-  '@antelopejs/core@1.23.0':
-    resolution: {integrity: sha512-RZvKjGqY8UntJxBNXtoYSSQwQxvM+WUgWfwB/YbQVk7K7GFugDCj3zyoLWmWyQDg48lwNbfrLDAMGvQ4OFy1Jg==}
+  '@antelopejs/core@1.24.0':
+    resolution: {integrity: sha512-lYw0iwu8pMohkWvU+aRTHRsZvRi2YXph+ALF3lwCyjilxeXlMxoCDwHroGP3iWXrAhqK8G/8iTloOz/b0WGUKw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
   '@antelopejs/interface-core@0.5.1':
     resolution: {integrity: sha512-ON/7TYA1yyT8UznzKi6vnwyjRU3byNE0OcFXBmf8dE/dqp8hKjeWHVyA2EUPOngmEimCLw4idZqOS5DJqMJx3g==}
 
-  '@antelopejs/interface-database-catalog@0.0.3':
-    resolution: {integrity: sha512-ZT7bZ0ycEs8VvEgNGQTGMAzKiFQC1BOYOM2f2e+vFuCN/1VPBZZFxg3XOmHClTzdW/RzX2k7lasfMyaVOUzOCA==}
+  '@antelopejs/interface-database-catalog@0.1.0':
+    resolution: {integrity: sha512-R5SL72JKD7u63UwBumWt18YsGXVnnWfKbBVwc323CgKvDcLS7Qfz+Eo/ko2ybr8wHq7Izi7maSTPhJn3fp91ug==}
     peerDependencies:
-      '@antelopejs/interface-core': '>=0.2.4 <1.0.0'
+      '@antelopejs/interface-core': '>=0.5.0 <0.6.0'
 
-  '@antelopejs/interface-database@0.4.0':
-    resolution: {integrity: sha512-cdVGd0qdHwkS3PHdbV9IJUyL3OoGjnmXoVbXdHPNmbwzmjUDkZQHFN2Y3b58SGsH11k3nS1EJLq0sTbKVhaKdQ==}
+  '@antelopejs/interface-database@0.4.1':
+    resolution: {integrity: sha512-Ad+a93DNl9zbdsKHCSaHCtrTwLnZB7Fv7S3+LmnplStrPFVLHZFVW6hCr8bB7Cv8cqpS1MjJVqm07/E/l82QGg==}
     peerDependencies:
-      '@antelopejs/interface-core': '>=0.2.4 <1.0.0'
+      '@antelopejs/interface-core': '>=0.5.1 <0.6.0'
 
   '@antelopejs/interface-mongodb@0.0.8':
     resolution: {integrity: sha512-sAJDFv29Zz2RFZaSvN/qIPW57/zpYFVHaOTaBi2dgDn650Z0hpD9gJx9LVp5NiCC3EmD+DeQggmA5ada+4zatA==}
@@ -134,8 +134,8 @@ packages:
       '@antelopejs/interface-core': '>=0.0.5 <1.0.0'
       '@antelopejs/interface-payment': '>=0.0.2 <1.0.0'
 
-  '@antelopejs/mongodb@1.8.0':
-    resolution: {integrity: sha512-I8JkAPY9SLmQYKL8JKGLvkzoHs18h/yWaRtuzhbtKodbyhfAgAJeeWYUc8DvfTculLv9LYOzWAmFObwPj4ayzQ==}
+  '@antelopejs/mongodb@1.8.4':
+    resolution: {integrity: sha512-qRSc6ufTZCY/v02oJEJNahKnYH76xerH5pfMlqvMtHWdRg4+aubPox6ow1BfguWLSs6fshd6jVDzwt3IrnnK2g==}
 
   '@antelopejs/redis@1.1.1':
     resolution: {integrity: sha512-eyrKGgG0XGMHtJVDx/nWQ1Rw2ocWE/OtgTfDRVLbvS4f5EHBSA5td+ZudZ1NSluf8CI9QISnAFjkvNbTLzElMA==}
@@ -2895,7 +2895,7 @@ packages:
 
 snapshots:
 
-  '@antelopejs/core@1.23.0':
+  '@antelopejs/core@1.24.0':
     dependencies:
       '@antelopejs/interface-core': 0.5.1
       '@clack/prompts': 1.8.1
@@ -2914,11 +2914,11 @@ snapshots:
     dependencies:
       reflect-metadata: 0.2.2
 
-  '@antelopejs/interface-database-catalog@0.0.3(@antelopejs/interface-core@0.5.1)':
+  '@antelopejs/interface-database-catalog@0.1.0(@antelopejs/interface-core@0.5.1)':
     dependencies:
       '@antelopejs/interface-core': 0.5.1
 
-  '@antelopejs/interface-database@0.4.0(@antelopejs/interface-core@0.5.1)':
+  '@antelopejs/interface-database@0.4.1(@antelopejs/interface-core@0.5.1)':
     dependencies:
       '@antelopejs/interface-core': 0.5.1
 
@@ -2959,13 +2959,14 @@ snapshots:
       '@antelopejs/interface-core': 0.5.1
       '@antelopejs/interface-payment': 0.2.1(@antelopejs/interface-core@0.5.1)
 
-  '@antelopejs/mongodb@1.8.0(socks@2.8.10)':
+  '@antelopejs/mongodb@1.8.4(socks@2.8.10)':
     dependencies:
       '@antelopejs/interface-core': 0.5.1
-      '@antelopejs/interface-database': 0.4.0(@antelopejs/interface-core@0.5.1)
-      '@antelopejs/interface-database-catalog': 0.0.3(@antelopejs/interface-core@0.5.1)
+      '@antelopejs/interface-database': 0.4.1(@antelopejs/interface-core@0.5.1)
+      '@antelopejs/interface-database-catalog': 0.1.0(@antelopejs/interface-core@0.5.1)
       chai: 4.5.0
       mongodb: 6.21.0(socks@2.8.10)
+      mongodb-connection-string-url: 3.0.2
       randomstring: 1.3.2
       reflect-metadata: 0.2.2
       uuid: 11.1.1

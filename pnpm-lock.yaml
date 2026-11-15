@@ -12,7 +12,7 @@ importers:
         specifier: '>=0.5.1 <0.6.0'
         version: 0.5.1
       '@antelopejs/interface-database':
-        specifier: '>=0.4.1 <0.5.0'
+        specifier: '>=0.4.0 <0.5.0'
         version: 0.4.1(@antelopejs/interface-core@0.5.1)
       '@antelopejs/interface-payment':
         specifier: '>=0.2.1 <0.3.0'

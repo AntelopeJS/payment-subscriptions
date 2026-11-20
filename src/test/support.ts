@@ -16,6 +16,7 @@ import {
 } from "@antelopejs/interface-subscriptions";
 
 import { type LedgerEntry, testControl } from "../../test/payment-provider";
+import type { Engine } from "../engine";
 import { Runtime } from "../runtime";
 import { start, stop } from "../index";
 import { type Clock, SYSTEM_CLOCK, UseClock } from "../clock";
@@ -78,11 +79,12 @@ export async function settleOn(
   predicate: (subscription: Subscription) => boolean,
   label: string,
   account?: string,
+  engine: Pick<Engine, "sweep"> = Runtime().engine,
 ): Promise<Subscription> {
   const deadline = Date.now() + SETTLE_TIMEOUT;
   let subscription = await GetSubscription(id, account);
   while (!predicate(subscription) && Date.now() < deadline) {
-    await Runtime().engine.sweep();
+    await engine.sweep();
     await delay(SETTLE_POLL);
     subscription = await GetSubscription(id, account);
   }

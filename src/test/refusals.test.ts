@@ -206,11 +206,12 @@ describe("[fallback] a subscription that keeps failing to process", function () 
     await withTriggerStopped(async () => {
       const engine = new Engine({ ...settings, batchSize: 1 }, broken);
       clock.advanceTo(healthy.currentPeriodEnd);
-      for (const _sweep of [1, 2, 3]) await engine.sweep();
-
-      assert.equal(
-        (await GetSubscription(healthy.id)).currentPeriodStart,
-        healthy.currentPeriodEnd,
+      await settleOn(
+        healthy.id,
+        (s) => s.currentPeriodStart === healthy.currentPeriodEnd,
+        "renewal queued behind the stuck one",
+        undefined,
+        engine,
       );
       assert.equal(
         (await GetSubscription(stuck.id)).currentPeriodStart,

@@ -39,7 +39,7 @@ The lines that name a changed rule match `^(?:BROKEN|CHANGED|HOLDS) +(\w+)`. A r
 
 ## When to run it
 
-Run `--full` when a change touches a file in the coverage record below, or this folder. A changed rule (exit 1) makes the Verdict FAIL. `antelopejs-verify formal` runs it through the `formal-billing-lease` entry of `.agents/skills/verify-module/verify.config.ts`, and compares the covered files' JavaScript statements on the base and on HEAD (`verify-module` verdict rule 5). The CI configuration catches every scratch break in the last section, so it is the one CI runs on every push (job `formal-billing-lease`).
+Run `--full` when a change touches a file in the coverage record below, or this folder. A changed rule (exit 1) fails the check. CI runs `node .agents/skills/formal-billing-lease/check.mjs` (job `formal-billing-lease`). The CI configuration catches every scratch break in the last section, so it is the one CI runs on every push.
 
 ## The rules
 

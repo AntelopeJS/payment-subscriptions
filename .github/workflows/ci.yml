@@ -28,8 +28,6 @@ jobs:
       affected-tests: true
     permissions:
       contents: read
-    secrets:
-      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
 
   formal-billing-lease:
     runs-on: ubuntu-latest

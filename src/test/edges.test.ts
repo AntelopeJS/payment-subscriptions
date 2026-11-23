@@ -26,6 +26,7 @@ import {
   subscribe,
   useManualClock,
   withTriggerStopped,
+  defined,
 } from "./support";
 
 const START = Date.UTC(2028, 1, 10, 8);
@@ -42,7 +43,7 @@ describe("[fallback] cancelling while money is moving", function () {
     await withTriggerStopped(async () => {
       clock.advanceTo(MONTH_LATER);
       const { engine } = Runtime();
-      const due = (await LoadRecord(created.id))!;
+      const due = defined(await LoadRecord(created.id));
       const decided = Decide(due, MONTH_LATER);
       const outcome = await engine.perform(due, decided);
 
@@ -78,7 +79,7 @@ describe("[fallback] cancelling while money is moving", function () {
     await UpdateSubscriptionPaymentMethod(created.id, settling, key());
     clock.advanceTo(MONTH_LATER);
     await quiesce();
-    const pending = (await GetSubscription(created.id)).latestPayment!;
+    const pending = defined((await GetSubscription(created.id)).latestPayment);
     assert.equal(provider.paymentStatus(pending), "pending");
 
     await CancelSubscription(created.id, key(), "now");

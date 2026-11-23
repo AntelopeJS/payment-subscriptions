@@ -29,6 +29,7 @@ import {
   subscribe,
   useManualClock,
   withTriggerStopped,
+  defined,
 } from "./support";
 
 const START = Date.UTC(2028, 4, 15, 10);
@@ -124,7 +125,7 @@ describe("[fallback] a charge in doubt", function () {
     await withTriggerStopped(async () => {
       clock.advanceTo(MONTH_LATER);
       const { engine } = Runtime();
-      const due = (await LoadRecord(created.id))!;
+      const due = defined(await LoadRecord(created.id));
       const decided = Decide(due, MONTH_LATER);
       provider.setUnreachable(true);
       const unreachable = await engine.perform(due, decided);

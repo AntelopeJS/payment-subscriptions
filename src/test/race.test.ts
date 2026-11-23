@@ -17,6 +17,7 @@ import {
   subscribe,
   useManualClock,
   withTriggerStopped,
+  defined,
 } from "./support";
 
 const START = Date.UTC(2027, 8, 1, 6);
@@ -81,11 +82,13 @@ describe("[fallback] several instances", function () {
 
     await withTriggerStopped(async () => {
       clock.advanceTo(MONTH_LATER);
-      const due = (await LoadRecord(created.id))!;
-      const crashed = (await MutateRecord(due, {
-        leaseOwner: "an-instance-that-dies-mid-charge",
-        leaseUntil: MONTH_LATER + Runtime().settings.leaseMs,
-      }))!;
+      const due = defined(await LoadRecord(created.id));
+      const crashed = defined(
+        await MutateRecord(due, {
+          leaseOwner: "an-instance-that-dies-mid-charge",
+          leaseUntil: MONTH_LATER + Runtime().settings.leaseMs,
+        }),
+      );
       const crashedCharge = await Runtime().engine.perform(
         crashed,
         Decide(crashed, MONTH_LATER),
@@ -133,7 +136,7 @@ describe("[fallback] instances that fall behind", function () {
     await withTriggerStopped(async () => {
       clock.advanceTo(MONTH_LATER);
       const slow = secondInstance();
-      const due = (await LoadRecord(created.id))!;
+      const due = defined(await LoadRecord(created.id));
       const decided = Decide(due, MONTH_LATER);
       provider.setUnreachable(true);
       const unreachable = await slow.perform(due, decided);

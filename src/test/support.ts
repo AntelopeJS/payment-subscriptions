@@ -38,6 +38,11 @@ const PERIOD_VALUE = 1900;
 export const CLOCK_UNDER_TEST =
   process.env.ANTELOPE_SUBSCRIPTIONS_TEST_CLOCK ?? "polling";
 
+export function defined<T>(value: T | null | undefined): T {
+  assert.ok(value !== null && value !== undefined, "expected a value");
+  return value;
+}
+
 export const provider = testControl;
 export const TOKENS = provider.TOKENS;
 

@@ -1,15 +1,4 @@
 #!/usr/bin/env node
-/**
- * Model-checks the renewal loop of @antelopejs/payment-subscriptions with
- * TLC through the shared runner of @antelopejs/tooling-configs:
- * BillingLease.tla with no replay guarantee (the default), then with one.
- *
- * With no argument it runs the CI configuration of each (`<config>.ci.cfg`);
- * with `--full` it runs the full one (`<config>.cfg`). Exits 0 when both
- * match the record in SKILL.md, 1 when a rule changed, and 2 when TLC could
- * not run. The runner exits on the first configuration that changed, so a
- * change without a replay guarantee skips the run with one.
- */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkSpec, EXIT } from "@antelopejs/tooling-configs/formal";

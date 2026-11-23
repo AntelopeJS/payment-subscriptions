@@ -21,6 +21,7 @@ import {
   subscribe,
   useManualClock,
   withTriggerStopped,
+  defined,
 } from "./support";
 
 const START = Date.UTC(2029, 0, 1);
@@ -59,7 +60,7 @@ describe("[fallback] bounded charge recovery", function () {
       await Runtime().engine.process(created.id);
       const halted = await GetSubscription(created.id);
       assert.equal(halted.vendorData?.reconciliationRequired, true);
-      assert.equal((await LoadRecord(created.id))!.nextActionAt, null);
+      assert.equal(defined(await LoadRecord(created.id)).nextActionAt, null);
       const calls = provider.chargesFor(created.id).length;
       await UpdateSubscriptionPaymentMethod(
         created.id,
@@ -96,7 +97,7 @@ describe("[fallback] bounded charge recovery", function () {
         await engine.process(created.id);
         provider.setLosesResponses(false);
         if (legacy) {
-          const record = (await LoadRecord(created.id))!;
+          const record = defined(await LoadRecord(created.id));
           await MutateRecord(record, {
             attemptStartedAt: null,
             attemptReplayUntil: null,
@@ -168,12 +169,12 @@ describe("[fallback] durable pending and crashed attempts", function () {
     await withTriggerStopped(async () => {
       clock.advanceTo(RENEWAL);
       const { engine } = Runtime();
-      const record = (await LoadRecord(created.id))!;
+      const record = defined(await LoadRecord(created.id));
       const decision = Decide(record, RENEWAL);
       const outcome = await engine.perform(record, decision);
       clock.advance(Runtime().settings.guaranteedReplayMs);
       await engine.process(created.id);
-      const held = (await LoadRecord(created.id))!;
+      const held = defined(await LoadRecord(created.id));
       assert.equal(held.reconciliationRequired, true);
       await MutateRecord(held, {
         pendingPayment: outcome.payment,
@@ -205,7 +206,10 @@ describe("[fallback] durable pending and crashed attempts", function () {
     await quiesce();
     assert.equal(provider.chargesFor(created.id).length, calls);
     assert.equal((await GetSubscription(created.id)).status, "active");
-    assert.equal(provider.paymentStatus(created.latestPayment!), "succeeded");
+    assert.equal(
+      provider.paymentStatus(defined(created.latestPayment)),
+      "succeeded",
+    );
   });
 
   it("halts a crashed, uncommitted charge after expiry without contacting the provider", async () => {
@@ -213,7 +217,7 @@ describe("[fallback] durable pending and crashed attempts", function () {
     await withTriggerStopped(async () => {
       clock.advanceTo(RENEWAL);
       const { engine } = Runtime();
-      const record = (await LoadRecord(created.id))!;
+      const record = defined(await LoadRecord(created.id));
       await engine.perform(record, Decide(record, RENEWAL));
       const calls = provider.chargesFor(created.id).length;
       clock.advance(Runtime().settings.guaranteedReplayMs);

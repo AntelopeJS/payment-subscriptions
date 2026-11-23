@@ -78,7 +78,13 @@ export function ChargeKey(
   return `payment-subscriptions:${record._id}:${decided.periodIndex}:${decided.attempt}`;
 }
 
-function period(record: SubscriptionRecord, index: number): RecordPatch {
+function period(
+  record: SubscriptionRecord,
+  index: number,
+): Pick<
+  SubscriptionRecord,
+  "periodIndex" | "currentPeriodStart" | "currentPeriodEnd"
+> {
   const boundary = (at: number) =>
     PeriodBoundary(record.anchor, record.interval, record.intervalCount, at);
   return {
@@ -134,7 +140,7 @@ const succeeded: Rule = (record, decided, outcome, now) => {
     attemptReplayUntil: null,
     reconciliationRequired: false,
     latestPayment: outcome.payment,
-    nextActionAt: paid.currentPeriodEnd!,
+    nextActionAt: paid.currentPeriodEnd,
   };
   return withEvents(record, patch, now, ["subscription.payment_succeeded"], {
     payment: outcome.payment,

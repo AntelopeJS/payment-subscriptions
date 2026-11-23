@@ -207,6 +207,13 @@ export class Engine {
     });
   }
 
+  private async settleOrCharge(record: SubscriptionRecord, decided: Decision) {
+    if (decided.kind !== "settle") return this.charge(record, decided);
+    if (record.pendingPayment === null)
+      throw new Error(`Subscription ${record._id} has no payment to settle`);
+    return GetPayment(record.pendingPayment, providerOf(record));
+  }
+
   /**
    * Runs the decided action against the provider and reports its outcome.
    * A charge that resumes an attempt, or runs with replay protection, rechecks
@@ -232,7 +239,7 @@ export class Engine {
       record = pinned;
       if (
         (!fresh || this.settings.guaranteedReplayMs > 0) &&
-        Now() >= record.attemptReplayUntil!
+        replayExpired(record)
       ) {
         Logging.Error(
           `payment-subscriptions: reconciliation required for ${record._id}; charge replay protection expired before dispatch`,
@@ -241,10 +248,7 @@ export class Engine {
       }
     }
     try {
-      const payment =
-        decided.kind === "settle"
-          ? await GetPayment(record.pendingPayment!, providerOf(record))
-          : await this.charge(record, decided);
+      const payment = await this.settleOrCharge(record, decided);
       return { kind: RESULT_OF_PAYMENT[payment.status], payment: payment.id };
     } catch (error) {
       if (!(error instanceof PaymentError)) throw error;

@@ -25,6 +25,7 @@ import {
   settleOn,
   subscribe,
   useManualClock,
+  defined,
 } from "./support";
 
 const START = Date.UTC(2027, 5, 1, 9);
@@ -62,7 +63,10 @@ describe("[fallback] a charge that settles later", function () {
   it("keeps the subscription active and reports nothing until the charge settles", async () => {
     const renewing = await settlingSubscription(TOKENS.settlesLater);
     assert.equal(renewing.status, "active");
-    assert.equal(provider.paymentStatus(renewing.latestPayment!), "pending");
+    assert.equal(
+      provider.paymentStatus(defined(renewing.latestPayment)),
+      "pending",
+    );
     assert.deepEqual(eventTypes(received, renewing.id), [
       "subscription.created",
       "subscription.payment_succeeded",
@@ -130,7 +134,7 @@ describe("[fallback] a provider that cannot be reached", function () {
       "after the outage",
     );
     assert.equal(renewed.status, "active");
-    const charged = chargesMade(created.id).at(-1)!;
+    const charged = defined(chargesMade(created.id).at(-1));
     assert.equal(charged.idempotencyKey, attempted[0].idempotencyKey);
   });
 });

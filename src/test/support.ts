@@ -79,6 +79,12 @@ export function useManualClock(start: number): ManualClock {
   return clock;
 }
 
+/**
+ * Sweeps until the subscription matches `predicate`, then waits for the
+ * engine work in flight, so the events of the matching write are delivered
+ * before it returns. The renewal clock can commit that write in the
+ * background and deliver its outbox only afterwards.
+ */
 export async function settleOn(
   id: string,
   predicate: (subscription: Subscription) => boolean,
@@ -93,6 +99,7 @@ export async function settleOn(
     await delay(SETTLE_POLL);
     subscription = await GetSubscription(id, account);
   }
+  await Runtime().engine.drain();
   assert.ok(
     predicate(subscription),
     `${label}: got ${JSON.stringify(subscription)}`,

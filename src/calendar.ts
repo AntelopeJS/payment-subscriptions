@@ -27,12 +27,12 @@ function addMonths(months: number): Step {
   };
 }
 
-const STEPS: Record<SubscriptionInterval, Step> = {
-  day: addDays(1),
-  week: addDays(7),
-  month: addMonths(1),
-  year: addMonths(MONTHS_PER_YEAR),
-};
+const STEPS: ReadonlyMap<SubscriptionInterval, Step> = new Map([
+  ["day", addDays(1)],
+  ["week", addDays(7)],
+  ["month", addMonths(1)],
+  ["year", addMonths(MONTHS_PER_YEAR)],
+]);
 
 export function PeriodBoundary(
   anchor: number,
@@ -40,5 +40,9 @@ export function PeriodBoundary(
   intervalCount: number,
   index: number,
 ): number {
-  return STEPS[interval](anchor, index * intervalCount);
+  const step = STEPS.get(interval);
+  if (step === undefined) {
+    throw new RangeError(`Unknown subscription interval: ${String(interval)}`);
+  }
+  return step(anchor, index * intervalCount);
 }

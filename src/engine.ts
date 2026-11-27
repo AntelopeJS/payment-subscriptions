@@ -12,6 +12,7 @@ import {
 
 import { Now } from "./clock";
 import { Deliver } from "./events";
+import { IsPaymentError } from "./payment-error";
 import { ToSubscription } from "./view";
 import type { Settings } from "./config";
 import type { ProviderSchedule } from "./schedule";
@@ -251,7 +252,7 @@ export class Engine {
       const payment = await this.settleOrCharge(record, decided);
       return { kind: RESULT_OF_PAYMENT[payment.status], payment: payment.id };
     } catch (error) {
-      if (!(error instanceof PaymentError)) throw error;
+      if (!IsPaymentError(error)) throw error;
       const kind = isRefusal(error)
         ? decided.kind === "settle"
           ? "reconcile"

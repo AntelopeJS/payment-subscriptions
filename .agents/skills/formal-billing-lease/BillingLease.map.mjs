@@ -1,9 +1,4 @@
 /**
- * Reader's view of BillingLease.tla for /statechart: one region for the
- * stored subscription, one for the provider and one per worker.
- */
-
-/**
  * The fields of the stored record this view reads.
  * @typedef {{ owner: string, period: number, status: string, pinned: boolean, reconcile: boolean, nextAt: number }} Rec
  */
@@ -51,7 +46,8 @@ const PLACES = new Map([
 ]);
 
 /**
- * One region for the subscription, one for the provider, one per worker.
+ * Reader view of BillingLease.tla for /statechart: one region for the stored
+ * subscription, one for the provider and one per worker.
  * @param {Vars} v
  * @returns {Record<string, string>}
  */

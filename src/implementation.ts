@@ -1,10 +1,6 @@
 import { createHash } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
-import {
-  GetPayment,
-  ListPaymentMethods,
-  PaymentError,
-} from "@antelopejs/interface-payment";
+import { GetPayment, ListPaymentMethods } from "@antelopejs/interface-payment";
 import {
   type CancellationTiming,
   InvalidSubscriptionRequestError,
@@ -18,6 +14,7 @@ import {
 } from "@antelopejs/interface-subscriptions";
 
 import { Now } from "./clock";
+import { IsPaymentError } from "./payment-error";
 import { Finalize } from "./engine";
 import { Runtime } from "./runtime";
 import { ToSubscription } from "./view";
@@ -71,7 +68,7 @@ async function wrappingProviderFailure<Result>(
   try {
     return await work;
   } catch (error) {
-    if (error instanceof PaymentError) {
+    if (IsPaymentError(error)) {
       throw new SubscriptionError(
         `The payment provider failed: ${error.message}`,
         error.providerCode,

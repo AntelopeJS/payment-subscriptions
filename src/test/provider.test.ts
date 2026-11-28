@@ -10,6 +10,7 @@ import {
   UpdateSubscriptionPaymentMethod,
 } from "@antelopejs/interface-subscriptions";
 
+import { Runtime } from "../runtime";
 import {
   DAY_MS,
   HOUR_MS,
@@ -187,7 +188,7 @@ describe("[fallback] delivering events", function () {
   const clock = useManualClock(START);
   recordEvents();
 
-  it("delivers an event again when a handler throws, and stops once it is handled", async () => {
+  it("delivers an event again errorBackoffMs after a handler throws, and stops once it is handled", async () => {
     const seen: SubscriptionEvent[] = [];
     let shouldFail = true;
     SubscriptionEvents.register("flaky", (event) => {
@@ -207,7 +208,14 @@ describe("[fallback] delivering events", function () {
         "first delivery",
       );
       await quiesce();
-      clock.advance(10 * MINUTE_MS);
+      clock.advance(Runtime().settings.errorBackoffMs - 1);
+      await quiesce();
+      assert.equal(
+        seen.filter((event) => event.subscription.id === created.id).length,
+        1,
+        "a rejected event waits out errorBackoffMs before its redelivery",
+      );
+      clock.advance(1);
       await settleOn(
         created.id,
         () =>

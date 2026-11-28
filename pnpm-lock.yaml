@@ -23,7 +23,7 @@ importers:
     devDependencies:
       '@antelopejs/core':
         specifier: ~1.24.0
-        version: 1.24.8
+        version: 1.24.9
       '@antelopejs/mongodb':
         specifier: ~1.8.15
         version: 1.8.15(socks@2.8.10)
@@ -91,8 +91,8 @@ importers:
 
 packages:
 
-  '@antelopejs/core@1.24.8':
-    resolution: {integrity: sha512-zEGT+Xlirpl3yFOgPFd6zCP30WNp83kQrRnZuwQRAvaUjvKtbQjL3YHoNolMOJxAwIzaeKuT6d5KXXyR8shNcA==}
+  '@antelopejs/core@1.24.9':
+    resolution: {integrity: sha512-VjqlnHgIZVLvQqyx6PyzsWEMpVV0H2ZRIK63wmbFzRl2EjebIXEwKeo5xZ+80B00HEBNd3vCXprvnL0LTar1qA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
@@ -3067,7 +3067,7 @@ packages:
 
 snapshots:
 
-  '@antelopejs/core@1.24.8':
+  '@antelopejs/core@1.24.9':
     dependencies:
       '@antelopejs/interface-core': 0.5.4
       '@clack/prompts': 1.9.0

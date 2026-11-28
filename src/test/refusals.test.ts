@@ -68,10 +68,13 @@ describe("[fallback] a provider that refuses the charge outright", function () {
     const created = await subscribe(payer);
     await DetachPaymentMethod(payer.paymentMethod, key());
 
-    for (const offset of RETRY_OFFSETS) {
-      clock.advanceTo(MONTH_LATER + offset);
-      await quiesce();
-    }
+    await withTriggerStopped(async () => {
+      const { engine } = Runtime();
+      for (const offset of RETRY_OFFSETS) {
+        clock.advanceTo(MONTH_LATER + offset);
+        await engine.process(created.id);
+      }
+    });
     const ended = await GetSubscription(created.id);
     assert.equal(ended.status, "canceled");
     assert.equal(ended.endReason, "payment_failed");

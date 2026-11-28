@@ -1,5 +1,50 @@
 # Changelog
 
+## v0.0.7
+
+[compare changes](https://github.com/AntelopeJS/payment-subscriptions/compare/v0.0.6...v0.0.7)
+
+### 🩹 Fixes
+
+- **engine:** Deliver an event raised during a delivery without the error backoff ([#73](https://github.com/AntelopeJS/payment-subscriptions/pull/73))
+
+### 📖 Documentation
+
+- Drop retired verify tooling from formal-billing-lease skill ([#61](https://github.com/AntelopeJS/payment-subscriptions/pull/61))
+
+### 📦 Build
+
+- **deps:** Move to the 15 November interface-database, mongodb and core releases ([#52](https://github.com/AntelopeJS/payment-subscriptions/pull/52))
+- Move to @antelopejs/tooling-configs 0.8 and the three-tier CI ([#54](https://github.com/AntelopeJS/payment-subscriptions/pull/54))
+- **ci:** Move to trunk CI with the merge queue ([#56](https://github.com/AntelopeJS/payment-subscriptions/pull/56))
+- Adopt tooling-configs 0.10.7 and pnpm 10.34.9 with a 24-hour release age ([#66](https://github.com/AntelopeJS/payment-subscriptions/pull/66))
+- **ci:** Adopt tooling-configs 0.10.12 and sync the guardrails ([#70](https://github.com/AntelopeJS/payment-subscriptions/pull/70))
+- **deps:** Bump tooling-configs to 0.10.14 and sync the guardrails ([#74](https://github.com/AntelopeJS/payment-subscriptions/pull/74))
+
+### 🏡 Chore
+
+- Adopt tooling-configs 0.10 and drop non-null assertions ([#62](https://github.com/AntelopeJS/payment-subscriptions/pull/62))
+- **deps:** Pin dependencies ([#64](https://github.com/AntelopeJS/payment-subscriptions/pull/64))
+- **deps:** Update dependency @antelopejs/core to v1.24.8 ([#65](https://github.com/AntelopeJS/payment-subscriptions/pull/65))
+- **deps:** Update dependency @antelopejs/redis to v1.1.3 ([#68](https://github.com/AntelopeJS/payment-subscriptions/pull/68))
+- **deps:** Bump @antelopejs/mongodb to 1.8.15 with interface-database 0.4.4 ([#69](https://github.com/AntelopeJS/payment-subscriptions/pull/69))
+- **deps:** Update dependency @antelopejs/core to v1.24.9 ([#72](https://github.com/AntelopeJS/payment-subscriptions/pull/72))
+- **deps:** Update antelopejs tooling configs ([#71](https://github.com/AntelopeJS/payment-subscriptions/pull/71))
+
+### ✅ Tests
+
+- Settle the fallback stuck-subscription test before asserting ([#57](https://github.com/AntelopeJS/payment-subscriptions/pull/57))
+- Deliver the settled write's events before settleOn returns ([#63](https://github.com/AntelopeJS/payment-subscriptions/pull/63))
+
+### 🤖 CI
+
+- Re-sync the AntelopeJS pack for the release app ([#58](https://github.com/AntelopeJS/payment-subscriptions/pull/58))
+- Stop forwarding the retired RELEASE_GITHUB_TOKEN ([#60](https://github.com/AntelopeJS/payment-subscriptions/pull/60))
+
+### ❤️ Contributors
+
+- Antony Rizzitelli
+
 ## v0.0.6
 
 [compare changes](https://github.com/AntelopeJS/payment-subscriptions/compare/v0.0.5...v0.0.6)

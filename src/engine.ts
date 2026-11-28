@@ -319,12 +319,14 @@ export class Engine {
   }
 
   async release(record: SubscriptionRecord): Promise<void> {
-    const delivered = new Set(await Deliver(record.outbox));
+    const deliveredIds = await Deliver(record.outbox);
+    const delivered = new Set(deliveredIds);
+    const failed = deliveredIds.length < record.outbox.length;
     let current: SubscriptionRecord | undefined = record;
     for (let attempt = 0; attempt < WRITE_ATTEMPTS && current; attempt += 1) {
       const written = await this.write(
         current,
-        this.releasePatch(current, delivered),
+        this.releasePatch(current, delivered, failed),
       );
       if (written) return;
       current = await LoadRecord(record._id);
@@ -334,14 +336,15 @@ export class Engine {
   private releasePatch(
     record: SubscriptionRecord,
     delivered: Set<string>,
+    failed: boolean,
   ): RecordPatch {
     const outbox = record.outbox.filter((event) => !delivered.has(event.id));
     const patch: RecordPatch = {
       outbox,
       dueAt:
-        outbox.length > 0
-          ? Now() + this.settings.errorBackoffMs
-          : record.nextActionAt,
+        outbox.length === 0
+          ? record.nextActionAt
+          : Now() + (failed ? this.settings.errorBackoffMs : 0),
     };
     if (record.leaseOwner === this.instanceId) {
       patch.leaseOwner = null;

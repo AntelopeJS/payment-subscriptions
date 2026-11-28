@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import {
+  CancelSubscription,
+  CreateSubscription,
   GetSubscription,
   ListSubscriptions,
   type SubscriptionEvent,
@@ -9,6 +11,7 @@ import {
 } from "@antelopejs/interface-subscriptions";
 
 import {
+  DAY_MS,
   HOUR_MS,
   MINUTE_MS,
   type ManualClock,
@@ -17,6 +20,7 @@ import {
   chargesMade,
   eventTypes,
   key,
+  monthly,
   newPayer,
   provider,
   quiesce,
@@ -235,6 +239,45 @@ describe("[fallback] delivering events", function () {
       assert.equal(after.length, 2, "a handled event is not delivered again");
     } finally {
       SubscriptionEvents.unregister("flaky");
+    }
+  });
+
+  it("delivers an event raised during a delivery without waiting out the error backoff", async () => {
+    const seen: SubscriptionEvent[] = [];
+    let reachHandler = (): void => undefined;
+    let releaseHandler = (): void => undefined;
+    const handlerReached = new Promise<void>((resolve) => {
+      reachHandler = resolve;
+    });
+    const handlerReleased = new Promise<void>((resolve) => {
+      releaseHandler = resolve;
+    });
+    SubscriptionEvents.register("slow", async (event) => {
+      seen.push(event);
+      if (event.type !== "subscription.created") return;
+      reachHandler();
+      await handlerReleased;
+    });
+    try {
+      const created = await CreateSubscription(
+        monthly(await newPayer(), { trialEnd: START + 14 * DAY_MS }),
+        key(),
+      );
+      await handlerReached;
+      await CancelSubscription(created.id, key(), "now");
+      releaseHandler();
+      await settleOn(
+        created.id,
+        () => eventTypes(seen, created.id).includes("subscription.canceled"),
+        "cancellation delivered while the clock stands still",
+      );
+      assert.deepEqual(eventTypes(seen, created.id), [
+        "subscription.created",
+        "subscription.canceled",
+      ]);
+    } finally {
+      releaseHandler();
+      SubscriptionEvents.unregister("slow");
     }
   });
 });

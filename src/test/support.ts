@@ -175,7 +175,7 @@ export async function newPayer(
   };
 }
 
-function monthly(
+export function monthly(
   payer: Payer,
   overrides: Partial<SubscriptionRequest> = {},
 ): SubscriptionRequest {

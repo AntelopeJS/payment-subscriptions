@@ -9,6 +9,11 @@ on:
   schedule:
     - cron: "17 2 * * *"
   workflow_dispatch:
+    inputs:
+      nightly:
+        description: Run the nightly tier, with the Windows jobs and Stress
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -26,38 +31,13 @@ jobs:
       renovate-sync: false
       test-job: true
       affected-tests: true
+      nightly: ${{ inputs.nightly == true }}
+      formal-checks: |
+        [
+          {"skill": "formal-billing-lease", "paths": ["src/clock.ts", "src/engine.ts", "src/records.ts", "src/transitions.ts", "src/triggers.ts"]}
+        ]
     permissions:
       contents: read
-
-  formal-billing-lease:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version-file: .nvmrc
-      - run: corepack enable
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
-        with:
-          distribution: temurin
-          java-version: "21"
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: ~/.cache/antelopejs-formal
-          key: antelopejs-formal-${{ hashFiles('.agents/skills/formal-billing-lease/**', 'pnpm-lock.yaml') }}
-          restore-keys: antelopejs-formal-
-      - run: node .agents/skills/formal-billing-lease/check.mjs
-
-  checks:
-    if: always()
-    needs: [ci, formal-billing-lease]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')
-        run: exit 1
   renovate-sync:
     if: >-
       github.event_name == 'pull_request' && startsWith(github.head_ref, 'renovate/') && github.event.pull_request.head.repo.full_name == github.repository
@@ -66,3 +46,19 @@ jobs:
       actions: write
       statuses: write
     uses: AntelopeJS/.github/.github/workflows/ci-renovate-sync.yml@v2
+  verdict:
+    needs: [ci, renovate-sync]
+    if: ${{ !cancelled() }}
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Fail when a job failed or was cancelled
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          failed=$(jq -r 'to_entries[] | select(.value.result == "failure" or .value.result == "cancelled") | "\(.key): \(.value.result)"' <<< "$NEEDS")
+          if [ -n "$failed" ]; then
+            echo "$failed"
+            exit 1
+          fi
